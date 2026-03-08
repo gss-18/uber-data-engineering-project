@@ -8,6 +8,7 @@ wheels/
 
 # Virtual environments
 .uber_de
+.venv
 
 .env
 
