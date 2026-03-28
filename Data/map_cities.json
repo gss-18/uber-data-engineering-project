@@ -1,72 +1,72 @@
 [
   {
     "city_id": 1,
-    "city": "New New York",
+    "city": "New York",
     "state": "NY",
     "region": "Northeast",
-    "updated_at":"2026-02-28T23:30:33.718+00:00"
+    "updated_at":"2026-02-28T23:31:33.718+00:00"
   },
   {
     "city_id": 2,
-    "city": "New Las Vegas",
+    "city": "Las Vegas",
     "state": "NV",
     "region": "West",
-    "updated_at":"2026-01-29T23:20:33.718+00:00"
+    "updated_at":"2026-01-29T23:21:33.718+00:00"
   },
   {
     "city_id": 3,
-    "city": "New Chicago",
+    "city": "Chicago",
     "state": "IL",
     "region": "Midwest",
-    "updated_at":"2026-02-26T23:32:33.718+00:00"
+    "updated_at":"2026-02-26T23:33:33.718+00:00"
   },
   {
     "city_id": 4,
-    "city": " New Houston",
+    "city": "Houston",
     "state": "TX",
     "region": "South",
-    "updated_at":"2026-02-28T23:25:33.718+00:00"
+    "updated_at":"2026-02-28T23:26:33.718+00:00"
   },
   {
     "city_id": 5,
-    "city": " New Phoenix",
+    "city": "Phoenix",
     "state": "AZ",
     "region": "Southwest",
-    "updated_at":"2026-02-28T23:06:13.718+00:00"
+    "updated_at":"2026-02-28T23:07:13.718+00:00"
   },
   {
     "city_id": 6,
-    "city": " New Philadelphia",
+    "city": "Philadelphia",
     "state": "PA",
     "region": "Northeast",
-    "updated_at":"2026-01-30T23:06:33.718+00:00"
+    "updated_at":"2026-01-30T23:07:33.718+00:00"
   },
   {
     "city_id": 7,
-    "city": " New San Antonio",
+    "city": "San Antonio",
     "state": "TX",
     "region": "South",
-    "updated_at":"2026-02-28T23:45:33.718+00:00"
+    "updated_at":"2026-02-28T23:47:33.718+00:00"
   },
   {
     "city_id": 8,
-    "city": " New San Diego",
+    "city": "San Diego",
     "state": "CA",
     "region": "West",
-    "updated_at":"2026-02-28T23:06:50.718+00:00"
+    "updated_at":"2026-02-28T23:36:50.718+00:00"
   },
   {
     "city_id": 9,
-    "city": " New Dallas",
+    "city": "Dallas",
     "state": "TX",
     "region": "South",
-    "updated_at":"2026-02-29T00:06:33.718+00:00"
+    "updated_at":"2026-02-29T06:06:33.718+00:00"
   },
   {
     "city_id": 10,
-    "city": " New San Jose",
+    "city": "San Jose",
     "state": "CA",
     "region": "West",
-    "updated_at":"2026-02-28T23:56:33.718+00:00"
+    "updated_at":"2026-02-29T12:56:33.718+00:00"
   }
 ]
