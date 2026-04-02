@@ -5,6 +5,10 @@ import pathlib
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
+# Inject Streamlit Cloud secrets into os.environ so os.getenv() works everywhere
+for _k, _v in st.secrets.items():
+    os.environ.setdefault(_k, str(_v))
+
 # ── Path setup ─────────────────────────────────────────────────────
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
