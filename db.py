@@ -2,6 +2,7 @@ from databricks import sql
 from dotenv import load_dotenv
 load_dotenv()
 import os
+import streamlit as st
 
 DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
 DATABRICKS_TOKEN = os.getenv("DATABRICKS_TOKEN")
@@ -41,6 +42,7 @@ def query(sql_str: str) -> list[dict]:
                 raise
 
 
+@st.cache_data(ttl=10)
 def get_pipeline_status() -> dict:
     """Get current pipeline run status from Databricks API."""
     import requests
@@ -66,6 +68,7 @@ def get_pipeline_status() -> dict:
 
 # ── KPI Cards ─────────────────────────────────────────────────────
 
+@st.cache_data(ttl=60)
 def get_kpis() -> dict:
     rows = query("""
         SELECT
@@ -84,6 +87,7 @@ def get_kpis() -> dict:
 
 # ── Live Feed ──────────────────────────────────────────────────────
 
+@st.cache_data(ttl=10)
 def get_live_feed(limit: int = 10) -> list[dict]:
     return query(f"""
         SELECT
@@ -112,6 +116,7 @@ def get_live_feed(limit: int = 10) -> list[dict]:
 
 # ── Charts ─────────────────────────────────────────────────────────
 
+@st.cache_data(ttl=60)
 def get_rides_by_city() -> list[dict]:
     return query("""
         SELECT
@@ -126,6 +131,7 @@ def get_rides_by_city() -> list[dict]:
     """)
 
 
+@st.cache_data(ttl=60)
 def get_rides_by_vehicle_type() -> list[dict]:
     return query("""
         SELECT
@@ -139,6 +145,7 @@ def get_rides_by_vehicle_type() -> list[dict]:
     """)
 
 
+@st.cache_data(ttl=60)
 def get_rides_by_payment() -> list[dict]:
     return query("""
         SELECT
@@ -151,6 +158,7 @@ def get_rides_by_payment() -> list[dict]:
     """)
 
 
+@st.cache_data(ttl=60)
 def get_surge_distribution() -> list[dict]:
     return query("""
         SELECT
@@ -165,6 +173,7 @@ def get_surge_distribution() -> list[dict]:
 
 # ── Driver Insights ────────────────────────────────────────────────
 
+@st.cache_data(ttl=60)
 def get_top_drivers(limit: int = 5) -> list[dict]:
     return query(f"""
         SELECT
@@ -184,6 +193,7 @@ def get_top_drivers(limit: int = 5) -> list[dict]:
 
 # ── Regional Revenue ───────────────────────────────────────────────
 
+@st.cache_data(ttl=60)
 def get_revenue_by_region() -> list[dict]:
     return query("""
         SELECT
@@ -201,6 +211,7 @@ def get_revenue_by_region() -> list[dict]:
 
 # ── Map Data ───────────────────────────────────────────────────────
 
+@st.cache_data(ttl=60)
 def get_pickup_locations(limit: int = 200) -> list[dict]:
     return query(f"""
         SELECT

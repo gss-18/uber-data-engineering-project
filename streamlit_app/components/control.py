@@ -12,7 +12,8 @@ ADMIN_PASSWORD   = os.getenv("ADMIN_PASSWORD")
 DATABRICKS_TOKEN = os.getenv("DATABRICKS_TOKEN")
 DATABRICKS_HOST  = os.getenv("DATABRICKS_HOST")
 PIPELINE_ID      = os.getenv("PIPELINE_ID")
-PROJECT_ROOT     = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) if "__file__" in dir() else os.path.dirname(os.path.dirname(os.getcwd()))
+if 'PROJECT_ROOT' not in vars():
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) if "__file__" in dir() else os.path.dirname(os.path.dirname(os.getcwd()))
 
 
 def section(label, sublabel=""):

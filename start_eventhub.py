@@ -122,15 +122,14 @@ with open(ENV_FILE, "w") as f:
     f.write(env_contents)
 print(".env updated")
 
-# ── Update Databricks + trigger full refresh ──────────────────────
+# ── Update Databricks pipeline config with new connection string ──
 update_pipeline_connection_string(listener_conn)
-restart_pipeline()
 
 print("\n" + "=" * 60)
 print("ALL DONE")
 print(f"  EventHub  : {NAMESPACE} is LIVE")
 print(f"  Topic     : {EVENTHUB}")
 print(f"  .env      : updated with new connection strings")
-print(f"  Databricks: pipeline config updated + full refresh triggered")
+print(f"  Databricks: pipeline config updated (trigger manually from control panel)")
 print("=" * 60)
 print("\nRemember to run stop_eventhub.py when done to avoid charges!")
