@@ -1,54 +1,60 @@
-import random
-import uuid
 import json
-from datetime import datetime, timedelta
-from faker import Faker
 from azure.eventhub import EventHubProducerClient, EventData
-import logging
 from dotenv import load_dotenv
-load_dotenv()  # Load environment variables from .env file
 import os
 
 # Pulling Data Generator Function
 from data import generate_uber_ride_confirmation
 
-CONNECTION_STRING = os.getenv("CONNECTION_STRING")
-EVENT_HUBNAME = os.getenv("EVENT_HUBNAME")
+# Module-level producer — reused across calls to avoid paying AMQP
+# connection setup (TLS + SASL handshake) on every booking.
+_producer: EventHubProducerClient | None = None
+_producer_conn_str: str | None = None
 
 
+def _get_producer() -> EventHubProducerClient | None:
+    global _producer, _producer_conn_str
+    load_dotenv(override=True)
+    conn_str = os.getenv("CONNECTION_STRING")
+    hub_name = os.getenv("EVENT_HUBNAME")
+
+    if not conn_str:
+        return None
+
+    # Re-create producer only when the connection string changes
+    # (e.g. after EventHub is stopped and restarted).
+    if _producer is None or conn_str != _producer_conn_str:
+        if _producer is not None:
+            try:
+                _producer.close()
+            except Exception:
+                pass
+        _producer = EventHubProducerClient.from_connection_string(
+            conn_str, eventhub_name=hub_name
+        )
+        _producer_conn_str = conn_str
+
+    return _producer
 
 
 def send_to_event_hub(ride_data=None, batch_size=1):
-
+    global _producer
     try:
-        # Initialize Event Hub Producer Client
-        producer = EventHubProducerClient.from_connection_string(
-            CONNECTION_STRING,
-            eventhub_name=EVENT_HUBNAME
-        )
-        
-        # Prepare ride records
-        ride_json = json.dumps(ride_data) 
-        
-        # Create batch of events
+        producer = _get_producer()
+        if producer is None:
+            print("EventHub connection string not set.")
+            return False
+
+        ride_json = json.dumps(ride_data)
         event_batch = producer.create_batch()
-
-            
-        # Create event with ride data 
-        event = EventData(ride_json)
-            
-        # Add event to batch
-        event_batch.add(event)
-
-        # Send batch to Event Hub
+        event_batch.add(EventData(ride_json))
         producer.send_batch(event_batch)
-        
-        producer.close()
-
         return "Successfully sent to Event Hub"
-        
+
     except Exception as e:
         print(f"Error sending data to Event Hub: {str(e)}")
+        # Force reconnect on the next call — the connection may have gone stale.
+        _producer = None
         return False
 
 

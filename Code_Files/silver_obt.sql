@@ -1,4 +1,4 @@
-CREATE OR REFRESH STREAMING TABLE silver_obt
+CREATE OR REFRESH STREAMING TABLE uber.silver.silver_obt
 AS
 
 
@@ -40,7 +40,7 @@ SELECT
 FROM
   
     
-        STREAM (uber.bronze.stg_rides) 
+        STREAM (uber.silver.stg_rides) 
         WATERMARK booking_timestamp DELAY OF INTERVAL 3 MINUTES stg_rides
     
   

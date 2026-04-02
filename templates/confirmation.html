@@ -1,36 +1,78 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ride Booking Home</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-        }
-        p {
-            color: #666;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Ride Confirmed</h1>
-        <p>Your ride has been successfully booked. Thank you for choosing our service!</p>
+{% extends "base.html" %}
+{% block title %}Ride Confirmation — Uber Analytics{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl mx-auto">
+
+    {% if success %}
+    <!-- Success -->
+    <div class="card text-center mb-6">
+        <div class="text-5xl mb-4">🚗</div>
+        <h1 class="text-2xl font-bold text-white mb-2">Ride Confirmed!</h1>
+        <p class="text-gray-400 mb-6">Your ride has been sent to EventHub successfully.</p>
+
+        <div class="grid grid-cols-2 gap-4 text-left mb-6">
+            <div class="kpi-card">
+                <div class="kpi-label">Passenger</div>
+                <div class="text-white font-semibold mt-1">{{ ride.passenger_name }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Driver</div>
+                <div class="text-white font-semibold mt-1">{{ ride.driver_name }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Vehicle</div>
+                <div class="text-white font-semibold mt-1">{{ ride.vehicle_color }} {{ ride.vehicle_model }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">License Plate</div>
+                <div class="text-white font-semibold mt-1">{{ ride.license_plate }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Distance</div>
+                <div class="text-white font-semibold mt-1">{{ ride.distance_miles }} miles</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Duration</div>
+                <div class="text-white font-semibold mt-1">{{ ride.duration_minutes }} mins</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Surge Multiplier</div>
+                <div class="text-white font-semibold mt-1">{{ ride.surge_multiplier }}x</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Total Fare</div>
+                <div class="text-green-400 font-bold text-xl mt-1">${{ ride.total_fare }}</div>
+            </div>
+        </div>
+
+        <div class="kpi-card text-left mb-6">
+            <div class="kpi-label mb-2">Pickup</div>
+            <div class="text-white text-sm">{{ ride.pickup_address }}</div>
+            <div class="kpi-label mt-3 mb-2">Dropoff</div>
+            <div class="text-white text-sm">{{ ride.dropoff_address }}</div>
+        </div>
+
+        <div class="flex gap-4 justify-center">
+            <a href="/book" class="btn-primary">Book Another</a>
+            <a href="/live" class="btn-primary" style="background:#1a73e8;">View Live Feed</a>
+        </div>
     </div>
-</body>
-</html>
+
+    {% else %}
+    <!-- Error -->
+    <div class="card text-center">
+        <div class="text-5xl mb-4">⚠️</div>
+        <h1 class="text-2xl font-bold text-white mb-2">Booking Failed</h1>
+        <p class="text-gray-400 mb-6">{{ message }}</p>
+        <div class="flex gap-4 justify-center">
+            <a href="/" class="btn-primary">Go to Dashboard</a>
+            <a href="/admin" class="btn-primary" style="background:#e53e3e;">Go to Admin</a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}
