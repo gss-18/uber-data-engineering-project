@@ -5,9 +5,9 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-DATABRICKS_TOKEN = os.getenv("DATABRICKS_TOKEN")
-DATABRICKS_HOST  = os.getenv("DATABRICKS_HOST")
-PIPELINE_ID      = os.getenv("PIPELINE_ID")
+DATABRICKS_TOKEN = st.secrets.get("DATABRICKS_TOKEN") or os.getenv("DATABRICKS_TOKEN")
+DATABRICKS_HOST  = st.secrets.get("DATABRICKS_HOST") or os.getenv("DATABRICKS_HOST")
+PIPELINE_ID      = st.secrets.get("PIPELINE_ID") or os.getenv("PIPELINE_ID")
 
 STATE_CONFIG = {
     "RUNNING":      {"color": "#00ffc8", "label": "Running",      "animate": True},

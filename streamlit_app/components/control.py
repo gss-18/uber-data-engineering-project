@@ -7,11 +7,11 @@ import requests as req
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-ADMIN_USERNAME   = os.getenv("ADMIN_USERNAME")
-ADMIN_PASSWORD   = os.getenv("ADMIN_PASSWORD")
-DATABRICKS_TOKEN = os.getenv("DATABRICKS_TOKEN")
-DATABRICKS_HOST  = os.getenv("DATABRICKS_HOST")
-PIPELINE_ID      = os.getenv("PIPELINE_ID")
+ADMIN_USERNAME   = st.secrets.get("ADMIN_USERNAME") or os.getenv("ADMIN_USERNAME")
+ADMIN_PASSWORD   = st.secrets.get("ADMIN_PASSWORD") or os.getenv("ADMIN_PASSWORD")
+DATABRICKS_TOKEN = st.secrets.get("DATABRICKS_TOKEN") or os.getenv("DATABRICKS_TOKEN")
+DATABRICKS_HOST  = st.secrets.get("DATABRICKS_HOST") or os.getenv("DATABRICKS_HOST")
+PIPELINE_ID      = st.secrets.get("PIPELINE_ID") or os.getenv("PIPELINE_ID")
 if 'PROJECT_ROOT' not in vars():
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) if "__file__" in dir() else os.path.dirname(os.path.dirname(os.getcwd()))
 

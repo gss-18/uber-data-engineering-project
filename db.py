@@ -4,10 +4,6 @@ load_dotenv()
 import os
 import streamlit as st
 
-DATABRICKS_HOST = os.getenv("DATABRICKS_HOST")
-DATABRICKS_TOKEN = os.getenv("DATABRICKS_TOKEN")
-DATABRICKS_HTTP_PATH = os.getenv("DATABRICKS_HTTP_PATH")
-
 # Module-level connection — reused across queries so we don't pay the
 # Databricks HTTP handshake + auth cost on every single query call.
 _conn = None
@@ -17,9 +13,9 @@ def get_connection():
     global _conn
     if _conn is None:
         _conn = sql.connect(
-            server_hostname=DATABRICKS_HOST,
-            http_path=DATABRICKS_HTTP_PATH,
-            access_token=DATABRICKS_TOKEN
+            server_hostname=os.getenv("DATABRICKS_HOST"),
+            http_path=os.getenv("DATABRICKS_HTTP_PATH"),
+            access_token=os.getenv("DATABRICKS_TOKEN")
         )
     return _conn
 
