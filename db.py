@@ -9,13 +9,21 @@ import streamlit as st
 _conn = None
 
 
+def _get_secret(key: str) -> str:
+    """Read from st.secrets first (Streamlit Cloud), fall back to os.getenv (local)."""
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return os.getenv(key)
+
+
 def get_connection():
     global _conn
     if _conn is None:
         _conn = sql.connect(
-            server_hostname=os.getenv("DATABRICKS_HOST"),
-            http_path=os.getenv("DATABRICKS_HTTP_PATH"),
-            access_token=os.getenv("DATABRICKS_TOKEN")
+            server_hostname=_get_secret("DATABRICKS_HOST"),
+            http_path=_get_secret("DATABRICKS_HTTP_PATH"),
+            access_token=_get_secret("DATABRICKS_TOKEN")
         )
     return _conn
 
