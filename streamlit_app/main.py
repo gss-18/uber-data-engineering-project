@@ -136,7 +136,7 @@ button[kind="secondary"] {
 """, unsafe_allow_html=True)
 
 # ── Top bar ────────────────────────────────────────────────────────
-connection_string = os.getenv("CONNECTION_STRING")
+connection_string = st.secrets.get("CONNECTION_STRING") or os.getenv("CONNECTION_STRING")
 eventhub_live = bool(connection_string)
 
 st.markdown(f"""

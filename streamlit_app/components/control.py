@@ -7,11 +7,13 @@ import requests as req
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-ADMIN_USERNAME   = st.secrets.get("ADMIN_USERNAME") or os.getenv("ADMIN_USERNAME")
-ADMIN_PASSWORD   = st.secrets.get("ADMIN_PASSWORD") or os.getenv("ADMIN_PASSWORD")
-DATABRICKS_TOKEN = st.secrets.get("DATABRICKS_TOKEN") or os.getenv("DATABRICKS_TOKEN")
-DATABRICKS_HOST  = st.secrets.get("DATABRICKS_HOST") or os.getenv("DATABRICKS_HOST")
-PIPELINE_ID      = st.secrets.get("PIPELINE_ID") or os.getenv("PIPELINE_ID")
+ADMIN_USERNAME        = st.secrets.get("ADMIN_USERNAME")        or os.getenv("ADMIN_USERNAME")
+ADMIN_PASSWORD        = st.secrets.get("ADMIN_PASSWORD")        or os.getenv("ADMIN_PASSWORD")
+DATABRICKS_TOKEN      = st.secrets.get("DATABRICKS_TOKEN")      or os.getenv("DATABRICKS_TOKEN")
+DATABRICKS_HOST       = st.secrets.get("DATABRICKS_HOST")       or os.getenv("DATABRICKS_HOST")
+PIPELINE_ID           = st.secrets.get("PIPELINE_ID")           or os.getenv("PIPELINE_ID")
+DATABRICKS_HTTP_PATH  = st.secrets.get("DATABRICKS_HTTP_PATH")  or os.getenv("DATABRICKS_HTTP_PATH")
+SECRET_KEY            = st.secrets.get("SECRET_KEY")            or os.getenv("SECRET_KEY")
 if 'PROJECT_ROOT' not in vars():
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) if "__file__" in dir() else os.path.dirname(os.path.dirname(os.getcwd()))
 
@@ -58,7 +60,7 @@ if not st.session_state.control_auth:
 
 # ── Authenticated ──────────────────────────────────────────────────
 load_dotenv(override=True)
-connection_string = os.getenv("CONNECTION_STRING")
+connection_string = st.secrets.get("CONNECTION_STRING") or os.getenv("CONNECTION_STRING")
 eventhub_live     = bool(connection_string)
 
 # ── Status header ──────────────────────────────────────────────────
@@ -97,10 +99,21 @@ col_start, col_stop, col_info = st.columns([1, 1, 3])
 
 with col_start:
     if st.button("▶ Start EventHub", type="primary", disabled=eventhub_live, use_container_width=True):
+        _secrets_env = {
+            **os.environ,
+            "DATABRICKS_HOST":       DATABRICKS_HOST       or "",
+            "DATABRICKS_TOKEN":      DATABRICKS_TOKEN      or "",
+            "PIPELINE_ID":           PIPELINE_ID           or "",
+            "DATABRICKS_HTTP_PATH":  DATABRICKS_HTTP_PATH  or "",
+            "ADMIN_USERNAME":        ADMIN_USERNAME        or "",
+            "ADMIN_PASSWORD":        ADMIN_PASSWORD        or "",
+            "SECRET_KEY":            SECRET_KEY            or "",
+        }
         with st.spinner("Provisioning EventHub namespace (~2 min)..."):
             result = subprocess.run(
                 ["python", "start_eventhub.py"],
-                capture_output=True, text=True, encoding="utf-8", cwd=PROJECT_ROOT
+                capture_output=True, text=True, encoding="utf-8", cwd=PROJECT_ROOT,
+                env=_secrets_env
             )
         if result.returncode == 0:
             st.success("EventHub started")
@@ -114,10 +127,21 @@ with col_start:
 with col_stop:
     confirm = st.checkbox("Confirm stop", disabled=not eventhub_live)
     if st.button("⏹ Stop EventHub", type="secondary", disabled=(not eventhub_live or not confirm), use_container_width=True):
+        _secrets_env = {
+            **os.environ,
+            "DATABRICKS_HOST":       DATABRICKS_HOST       or "",
+            "DATABRICKS_TOKEN":      DATABRICKS_TOKEN      or "",
+            "PIPELINE_ID":           PIPELINE_ID           or "",
+            "DATABRICKS_HTTP_PATH":  DATABRICKS_HTTP_PATH  or "",
+            "ADMIN_USERNAME":        ADMIN_USERNAME        or "",
+            "ADMIN_PASSWORD":        ADMIN_PASSWORD        or "",
+            "SECRET_KEY":            SECRET_KEY            or "",
+        }
         with st.spinner("Deleting namespace — billing stops immediately"):
             result = subprocess.run(
                 ["python", "stop_eventhub.py", "--yes"],
-                capture_output=True, text=True, encoding="utf-8", cwd=PROJECT_ROOT
+                capture_output=True, text=True, encoding="utf-8", cwd=PROJECT_ROOT,
+                env=_secrets_env
             )
         if result.returncode == 0:
             st.success("EventHub deleted — billing stopped")
