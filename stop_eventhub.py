@@ -15,6 +15,9 @@ DATABRICKS_HTTP_PATH   = os.getenv("DATABRICKS_HTTP_PATH")
 
 def run(cmd):
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"Error: {result.stderr}")
+        exit(1)
     return result.stdout.strip()
 
 # Allow --yes flag to skip confirmation (used by Streamlit)
