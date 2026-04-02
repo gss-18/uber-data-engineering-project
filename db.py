@@ -50,9 +50,9 @@ def query(sql_str: str) -> list[dict]:
 def get_pipeline_status() -> dict:
     """Get current pipeline run status from Databricks API."""
     import requests
-    token = os.getenv("DATABRICKS_TOKEN")
-    host  = os.getenv("DATABRICKS_HOST")
-    pipeline_id = os.getenv("PIPELINE_ID")
+    token = _get_secret("DATABRICKS_TOKEN")
+    host  = _get_secret("DATABRICKS_HOST")
+    pipeline_id = _get_secret("PIPELINE_ID")
 
     try:
         resp = requests.get(
