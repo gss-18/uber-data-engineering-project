@@ -111,7 +111,7 @@ with col_start:
         }
         with st.spinner("Provisioning EventHub namespace (~2 min)..."):
             result = subprocess.run(
-                ["python", "start_eventhub.py"],
+                [sys.executable, "start_eventhub.py"],
                 capture_output=True, text=True, encoding="utf-8", cwd=PROJECT_ROOT,
                 env=_secrets_env
             )
@@ -139,7 +139,7 @@ with col_stop:
         }
         with st.spinner("Deleting namespace — billing stops immediately"):
             result = subprocess.run(
-                ["python", "stop_eventhub.py", "--yes"],
+                [sys.executable, "stop_eventhub.py", "--yes"],
                 capture_output=True, text=True, encoding="utf-8", cwd=PROJECT_ROOT,
                 env=_secrets_env
             )
