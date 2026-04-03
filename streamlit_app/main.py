@@ -5,13 +5,11 @@ import pathlib
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-
 # ── Path setup ─────────────────────────────────────────────────────
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-# Add components dir so pipeline_status is importable
 COMPONENTS_DIR = str(pathlib.Path(__file__).parent / "components")
 if COMPONENTS_DIR not in sys.path:
     sys.path.insert(0, COMPONENTS_DIR)
@@ -135,16 +133,23 @@ button[kind="secondary"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ── Top bar ────────────────────────────────────────────────────────
-# Initialize session state on first load from secrets/env.
+# ── EventHub live status — read from Key Vault via session state ───
+# On first load, fetch from Key Vault so the status is always current.
 # control.py updates st.session_state.eventhub_live directly after
-# start/stop so the top bar reflects changes without a reboot.
+# start/stop so the top bar reflects changes without a full reload.
 if "eventhub_live" not in st.session_state:
-    connection_string = st.secrets.get("CONNECTION_STRING") or os.getenv("CONNECTION_STRING")
-    st.session_state.eventhub_live = bool(connection_string)
+    try:
+        from eventhub_manager import get_connection_strings
+        conn_str, _ = get_connection_strings()
+        st.session_state.eventhub_live = bool(conn_str)
+    except Exception:
+        # Fall back to secrets/env if Key Vault is unreachable
+        conn_str = st.secrets.get("CONNECTION_STRING") or os.getenv("CONNECTION_STRING")
+        st.session_state.eventhub_live = bool(conn_str)
 
 eventhub_live = st.session_state.eventhub_live
 
+# ── Top bar ────────────────────────────────────────────────────────
 st.markdown(f"""
 <div style="
     display:flex;align-items:center;justify-content:space-between;
@@ -172,7 +177,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# ── Pipeline status bar — sits between header and tabs ─────────────
+# ── Pipeline status bar ────────────────────────────────────────────
 render_pipeline_bar()
 
 # ── Two tabs ───────────────────────────────────────────────────────

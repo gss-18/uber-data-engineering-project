@@ -1,13 +1,15 @@
 """
 stop_eventhub.py — Local helper script
 ──────────────────────────────────────
-Run this locally to delete EventHub and stop billing.
-On Streamlit Cloud, the same logic runs via the control panel button.
+Deletes EventHub namespace and clears connection strings from Key Vault.
+The Streamlit app will automatically show EventHub as OFFLINE since
+Key Vault returns empty strings — no manual secrets paste needed.
 """
 import os
 import sys
+from pathlib import Path
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(Path(__file__).parent / ".env")
 
 from eventhub_manager import stop_eventhub
 
@@ -33,8 +35,10 @@ if not auto_confirm:
         print("Cancelled.")
         exit(0)
 
-# ── Delete EventHub ───────────────────────────────────────────────
-stop_eventhub()
+# ── Delete EventHub + clear Key Vault ────────────────────────────
+print("Stopping EventHub...")
+stop_eventhub(on_status=print)
+print("Key Vault secrets cleared ✅")
 
 # ── Clear local .env ──────────────────────────────────────────────
 env_contents = f"""CONNECTION_STRING=
@@ -57,7 +61,6 @@ AZURE_SUBSCRIPTION_ID={AZURE_SUBSCRIPTION_ID}
 """
 with open(ENV_FILE, "w") as f:
     f.write(env_contents)
-print(".env EventHub credentials cleared")
 
 # ── Clear local .streamlit/secrets.toml ──────────────────────────
 secrets_toml = f"""CONNECTION_STRING = ""
@@ -78,13 +81,9 @@ AZURE_SUBSCRIPTION_ID = "{AZURE_SUBSCRIPTION_ID}"
 os.makedirs(".streamlit", exist_ok=True)
 with open(".streamlit/secrets.toml", "w") as f:
     f.write(secrets_toml)
-print(".streamlit/secrets.toml cleared")
 
-# ── Summary ───────────────────────────────────────────────────────
 print("\n" + "=" * 60)
 print("EventHub DELETED — billing stopped")
+print("Key Vault cleared — app will show EventHub as OFFLINE ✅")
 print(".env and secrets.toml cleared")
 print("=" * 60)
-print("\n📋 Paste this into Streamlit Cloud → app ⋮ → Settings → Secrets")
-print("   to show EventHub as OFFLINE in the deployed app:\n")
-print(secrets_toml)

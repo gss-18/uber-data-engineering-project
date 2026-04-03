@@ -9,6 +9,7 @@ from eventhub_manager import (
     stop_eventhub,
     update_pipeline_connection_string,
     trigger_pipeline,
+    get_connection_strings,
     NAMESPACE,
     EVENTHUB,
 )
@@ -62,15 +63,10 @@ if not st.session_state.control_auth:
 
 # ── Authenticated ──────────────────────────────────────────────────
 
-# eventhub_live uses session_state so it updates immediately after
-# start/stop without needing a secrets reload or app reboot.
-# On first load, derive it from secrets/env. After start/stop,
-# the button handlers update session_state directly.
-if "eventhub_live" not in st.session_state:
-    connection_string = st.secrets.get("CONNECTION_STRING") or os.getenv("CONNECTION_STRING")
-    st.session_state.eventhub_live = bool(connection_string)
-
-eventhub_live = st.session_state.eventhub_live
+# eventhub_live is managed in session_state so start/stop buttons
+# update the UI immediately without needing a page reload.
+# main.py initializes it from Key Vault on first load.
+eventhub_live = st.session_state.get("eventhub_live", False)
 
 # ── Status header ──────────────────────────────────────────────────
 st.markdown(f"""
@@ -110,33 +106,24 @@ with col_start:
     if st.button("▶ Start EventHub", type="primary", disabled=eventhub_live, use_container_width=True):
         status_box = st.empty()
         try:
-            # Stream safe status updates — no credentials in these messages
             def on_status(msg):
                 status_box.info(f"⏳ {msg}")
 
             sender_conn, listener_conn = start_eventhub(on_status=on_status)
-            on_status("Updating Databricks pipeline config...")
             update_pipeline_connection_string(listener_conn, on_status=on_status)
 
-            # Update session state immediately so UI reflects LIVE status
+            # Update session state — top bar and status dot update immediately
             st.session_state.eventhub_live = True
 
             status_box.empty()
-            st.success("✅ EventHub is LIVE — Databricks pipeline config updated")
-            st.warning(
-                "⚠️ Paste the new secrets block into **App ⋮ → Settings → Secrets** "
-                "and reboot the app so the connection string persists across sessions."
+            st.success(
+                "✅ EventHub is LIVE — connection strings written to Key Vault. "
+                "The app will use the new credentials automatically."
             )
-            # Show secrets block WITHOUT the connection strings visible in plain text
-            # User needs to go to Streamlit Cloud to paste — we show a placeholder
-            st.code(f"""CONNECTION_STRING = "<copy from Azure Portal — SenderPolicy>"
-LISTENER_CONNECTION_STRING = "<copy from Azure Portal — ListenerPolicy>"
-EVENT_HUBNAME = "{EVENTHUB}"
-# ... keep all other secrets unchanged""", language="toml")
 
         except Exception as e:
             status_box.empty()
-            st.error(f"Failed to start EventHub: {type(e).__name__}")
+            st.error(f"Failed to start EventHub: {type(e).__name__}: {e}")
 
         time.sleep(0.5)
         st.rerun()
@@ -151,20 +138,18 @@ with col_stop:
 
             stop_eventhub(on_status=on_status)
 
-            # Update session state immediately so UI reflects OFFLINE status
+            # Update session state — top bar and status dot update immediately
             st.session_state.eventhub_live = False
 
             status_box.empty()
-            st.success("✅ EventHub deleted — billing stopped")
-            st.info(
-                "Update **App ⋮ → Settings → Secrets**: set "
-                "`CONNECTION_STRING = \"\"` and `LISTENER_CONNECTION_STRING = \"\"` "
-                "to persist the OFFLINE state across sessions."
+            st.success(
+                "✅ EventHub deleted — billing stopped. "
+                "Key Vault cleared — app shows EventHub as OFFLINE automatically."
             )
 
         except Exception as e:
             status_box.empty()
-            st.error(f"Failed to stop EventHub: {type(e).__name__}")
+            st.error(f"Failed to stop EventHub: {type(e).__name__}: {e}")
 
         time.sleep(0.5)
         st.rerun()
@@ -174,8 +159,8 @@ with col_info:
     <div style="border:1px solid rgba(255,184,0,0.15);background:rgba(255,184,0,0.04);padding:1rem 1.25rem;border-radius:2px;font-family:'Space Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.8;">
         <span style="color:rgba(255,184,0,0.7);">// cost model</span><br>
         Standard tier · ~$0.015/TU/hr · delete when not in use<br>
-        Start: creates namespace + policies + updates Databricks pipeline config<br>
-        Stop: deletes namespace + preserves archive data in Delta Lake
+        Start: creates namespace + writes to Key Vault + updates pipeline<br>
+        Stop: deletes namespace + clears Key Vault · no manual steps needed
     </div>
     """, unsafe_allow_html=True)
 
