@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import time
-import requests as req
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
@@ -10,6 +9,8 @@ from eventhub_manager import (
     stop_eventhub,
     update_pipeline_connection_string,
     trigger_pipeline,
+    NAMESPACE,
+    EVENTHUB,
 )
 
 ADMIN_USERNAME   = st.secrets.get("ADMIN_USERNAME")   or os.getenv("ADMIN_USERNAME")
@@ -17,8 +18,6 @@ ADMIN_PASSWORD   = st.secrets.get("ADMIN_PASSWORD")   or os.getenv("ADMIN_PASSWO
 DATABRICKS_TOKEN = st.secrets.get("DATABRICKS_TOKEN") or os.getenv("DATABRICKS_TOKEN")
 DATABRICKS_HOST  = st.secrets.get("DATABRICKS_HOST")  or os.getenv("DATABRICKS_HOST")
 PIPELINE_ID      = st.secrets.get("PIPELINE_ID")      or os.getenv("PIPELINE_ID")
-
-EVENTHUB = "ubertopic"
 
 
 def section(label, sublabel=""):
@@ -62,8 +61,16 @@ if not st.session_state.control_auth:
     st.stop()
 
 # ── Authenticated ──────────────────────────────────────────────────
-connection_string = st.secrets.get("CONNECTION_STRING") or os.getenv("CONNECTION_STRING")
-eventhub_live     = bool(connection_string)
+
+# eventhub_live uses session_state so it updates immediately after
+# start/stop without needing a secrets reload or app reboot.
+# On first load, derive it from secrets/env. After start/stop,
+# the button handlers update session_state directly.
+if "eventhub_live" not in st.session_state:
+    connection_string = st.secrets.get("CONNECTION_STRING") or os.getenv("CONNECTION_STRING")
+    st.session_state.eventhub_live = bool(connection_string)
+
+eventhub_live = st.session_state.eventhub_live
 
 # ── Status header ──────────────────────────────────────────────────
 st.markdown(f"""
@@ -73,16 +80,16 @@ st.markdown(f"""
             <div style="font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">EventHub Status</div>
             <div style="display:flex;align-items:center;gap:0.5rem;">
                 <div style="width:8px;height:8px;border-radius:50%;background:{'#00ffc8' if eventhub_live else '#ff4444'};box-shadow:0 0 {'10px #00ffc8' if eventhub_live else '10px #ff4444'};"></div>
-                <div style="font-family:'Space Mono',monospace;font-size:0.8rem;font-weight:700;color:{'#00ffc8' if eventhub_live else '#ff4444'};font-weight:700;">{'LIVE' if eventhub_live else 'OFFLINE'}</div>
+                <div style="font-family:'Space Mono',monospace;font-size:0.8rem;font-weight:700;color:{'#00ffc8' if eventhub_live else '#ff4444'};">{'LIVE' if eventhub_live else 'OFFLINE'}</div>
             </div>
         </div>
         <div>
             <div style="font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">Namespace</div>
-            <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);">rg-uber-events</div>
+            <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);">{NAMESPACE}</div>
         </div>
         <div>
             <div style="font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">Topic</div>
-            <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);">ubertopic</div>
+            <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);">{EVENTHUB}</div>
         </div>
         <div>
             <div style="font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">Workspace</div>
@@ -101,74 +108,65 @@ col_start, col_stop, col_info = st.columns([1, 1, 3])
 
 with col_start:
     if st.button("▶ Start EventHub", type="primary", disabled=eventhub_live, use_container_width=True):
-        with st.spinner("Provisioning EventHub namespace (~2 min)..."):
-            try:
-                sender_conn, listener_conn = start_eventhub()
-                update_pipeline_connection_string(listener_conn)
+        status_box = st.empty()
+        try:
+            # Stream safe status updates — no credentials in these messages
+            def on_status(msg):
+                status_box.info(f"⏳ {msg}")
 
-                # Build secrets block for manual paste into Streamlit Cloud
-                secrets_block = f"""CONNECTION_STRING = "{sender_conn}"
-LISTENER_CONNECTION_STRING = "{listener_conn}"
+            sender_conn, listener_conn = start_eventhub(on_status=on_status)
+            on_status("Updating Databricks pipeline config...")
+            update_pipeline_connection_string(listener_conn, on_status=on_status)
+
+            # Update session state immediately so UI reflects LIVE status
+            st.session_state.eventhub_live = True
+
+            status_box.empty()
+            st.success("✅ EventHub is LIVE — Databricks pipeline config updated")
+            st.warning(
+                "⚠️ Paste the new secrets block into **App ⋮ → Settings → Secrets** "
+                "and reboot the app so the connection string persists across sessions."
+            )
+            # Show secrets block WITHOUT the connection strings visible in plain text
+            # User needs to go to Streamlit Cloud to paste — we show a placeholder
+            st.code(f"""CONNECTION_STRING = "<copy from Azure Portal — SenderPolicy>"
+LISTENER_CONNECTION_STRING = "<copy from Azure Portal — ListenerPolicy>"
 EVENT_HUBNAME = "{EVENTHUB}"
-DATABRICKS_HOST = "{DATABRICKS_HOST}"
-DATABRICKS_TOKEN = "{DATABRICKS_TOKEN}"
-PIPELINE_ID = "{PIPELINE_ID}"
-DATABRICKS_HTTP_PATH = "{st.secrets.get('DATABRICKS_HTTP_PATH') or os.getenv('DATABRICKS_HTTP_PATH')}"
-ADMIN_USERNAME = "{ADMIN_USERNAME}"
-ADMIN_PASSWORD = "{ADMIN_PASSWORD}"
-SECRET_KEY = "{st.secrets.get('SECRET_KEY') or os.getenv('SECRET_KEY')}"
-AZURE_TENANT_ID = "{st.secrets.get('AZURE_TENANT_ID') or os.getenv('AZURE_TENANT_ID')}"
-AZURE_CLIENT_ID = "{st.secrets.get('AZURE_CLIENT_ID') or os.getenv('AZURE_CLIENT_ID')}"
-AZURE_CLIENT_SECRET = "{st.secrets.get('AZURE_CLIENT_SECRET') or os.getenv('AZURE_CLIENT_SECRET')}"
-AZURE_SUBSCRIPTION_ID = "{st.secrets.get('AZURE_SUBSCRIPTION_ID') or os.getenv('AZURE_SUBSCRIPTION_ID')}"
-"""
-                st.success("✅ EventHub started — Databricks pipeline config updated")
-                st.warning(
-                    "⚠️ Copy the secrets block below and paste it into "
-                    "**App ⋮ → Settings → Secrets**, then reboot the app "
-                    "so the new connection string takes effect."
-                )
-                st.code(secrets_block, language="toml")
+# ... keep all other secrets unchanged""", language="toml")
 
-            except Exception as e:
-                st.error(f"Failed to start EventHub: {e}")
+        except Exception as e:
+            status_box.empty()
+            st.error(f"Failed to start EventHub: {type(e).__name__}")
 
-        time.sleep(1)
+        time.sleep(0.5)
         st.rerun()
 
 with col_stop:
     confirm = st.checkbox("Confirm stop", disabled=not eventhub_live)
     if st.button("⏹ Stop EventHub", type="secondary", disabled=(not eventhub_live or not confirm), use_container_width=True):
-        with st.spinner("Deleting namespace — billing stops immediately..."):
-            try:
-                stop_eventhub()
+        status_box = st.empty()
+        try:
+            def on_status(msg):
+                status_box.info(f"⏳ {msg}")
 
-                secrets_block = f"""CONNECTION_STRING = ""
-LISTENER_CONNECTION_STRING = ""
-EVENT_HUBNAME = ""
-DATABRICKS_HOST = "{DATABRICKS_HOST}"
-DATABRICKS_TOKEN = "{DATABRICKS_TOKEN}"
-PIPELINE_ID = "{PIPELINE_ID}"
-DATABRICKS_HTTP_PATH = "{st.secrets.get('DATABRICKS_HTTP_PATH') or os.getenv('DATABRICKS_HTTP_PATH')}"
-ADMIN_USERNAME = "{ADMIN_USERNAME}"
-ADMIN_PASSWORD = "{ADMIN_PASSWORD}"
-SECRET_KEY = "{st.secrets.get('SECRET_KEY') or os.getenv('SECRET_KEY')}"
-AZURE_TENANT_ID = "{st.secrets.get('AZURE_TENANT_ID') or os.getenv('AZURE_TENANT_ID')}"
-AZURE_CLIENT_ID = "{st.secrets.get('AZURE_CLIENT_ID') or os.getenv('AZURE_CLIENT_ID')}"
-AZURE_CLIENT_SECRET = "{st.secrets.get('AZURE_CLIENT_SECRET') or os.getenv('AZURE_CLIENT_SECRET')}"
-AZURE_SUBSCRIPTION_ID = "{st.secrets.get('AZURE_SUBSCRIPTION_ID') or os.getenv('AZURE_SUBSCRIPTION_ID')}"
-"""
-                st.success("✅ EventHub deleted — billing stopped")
-                st.warning(
-                    "⚠️ Paste the block below into **App ⋮ → Settings → Secrets** "
-                    "and reboot to mark EventHub as OFFLINE in the dashboard."
-                )
-                st.code(secrets_block, language="toml")
+            stop_eventhub(on_status=on_status)
 
-            except Exception as e:
-                st.error(f"Failed to stop EventHub: {e}")
+            # Update session state immediately so UI reflects OFFLINE status
+            st.session_state.eventhub_live = False
 
-        time.sleep(1)
+            status_box.empty()
+            st.success("✅ EventHub deleted — billing stopped")
+            st.info(
+                "Update **App ⋮ → Settings → Secrets**: set "
+                "`CONNECTION_STRING = \"\"` and `LISTENER_CONNECTION_STRING = \"\"` "
+                "to persist the OFFLINE state across sessions."
+            )
+
+        except Exception as e:
+            status_box.empty()
+            st.error(f"Failed to stop EventHub: {type(e).__name__}")
+
+        time.sleep(0.5)
         st.rerun()
 
 with col_info:
@@ -195,7 +193,7 @@ with col_trigger:
         if resp.status_code == 200:
             st.success("Pipeline update triggered")
         else:
-            st.error(f"Failed: {resp.text}")
+            st.error(f"Failed: {resp.status_code}")
 
 with col_full:
     confirm_full = st.checkbox("Confirm full refresh")
@@ -204,7 +202,7 @@ with col_full:
         if resp.status_code == 200:
             st.success("Full refresh triggered")
         else:
-            st.error(f"Failed: {resp.text}")
+            st.error(f"Failed: {resp.status_code}")
 
 with col_pinfo:
     st.markdown(f"""
