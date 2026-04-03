@@ -68,17 +68,21 @@ def kv_set(name: str, value: str) -> None:
     _get_kv_client().set_secret(name, value)
 
 
-def kv_get(name: str) -> str | None:
-    """Read a secret from Key Vault. Returns None if not found."""
-    try:
-        return _get_kv_client().get_secret(name).value
-    except Exception:
-        return None
-
+OFFLINE_SENTINEL = "OFFLINE"
 
 def kv_clear(name: str) -> None:
-    """Set a Key Vault secret to empty string (marks as inactive)."""
-    _get_kv_client().set_secret(name, "")
+    """Mark a Key Vault secret as inactive using a sentinel value."""
+    _get_kv_client().set_secret(name, OFFLINE_SENTINEL)
+
+def kv_get(name: str) -> str | None:
+    """Read a secret from Key Vault. Returns None if not found or offline."""
+    try:
+        value = _get_kv_client().get_secret(name).value
+        if not value or value == OFFLINE_SENTINEL:
+            return None
+        return value
+    except Exception:
+        return None
 
 
 # ── Public API ────────────────────────────────────────────────────
