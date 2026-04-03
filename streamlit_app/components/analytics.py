@@ -84,7 +84,7 @@ def action_bar():
     with col_status:
         if book_btn:
             load_dotenv(override=True)
-            eventhub_live = bool(st.secrets.get("CONNECTION_STRING") or os.getenv("CONNECTION_STRING"))
+            eventhub_live = st.session_state.get("eventhub_live", False)
             if not eventhub_live:
                 st.error("EventHub offline — start it in Pipeline Control tab")
             else:
