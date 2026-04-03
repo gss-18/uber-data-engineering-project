@@ -1,89 +1,232 @@
 """
-stop_eventhub.py — Local helper script
-──────────────────────────────────────
-Deletes EventHub namespace and clears connection strings from Key Vault.
-The Streamlit app will automatically show EventHub as OFFLINE since
-Key Vault returns empty strings — no manual secrets paste needed.
+eventhub_manager.py — Shared Azure SDK module
+──────────────────────────────────────────────
+Used by both local scripts (start_eventhub.py, stop_eventhub.py)
+and the Streamlit control panel (control.py).
+
+Key Vault is the single source of truth for CONNECTION_STRING and
+LISTENER_CONNECTION_STRING. The app always fetches them at runtime,
+so no manual secrets paste is ever needed after start/stop.
 """
 import os
-import sys
-from pathlib import Path
-from dotenv import load_dotenv
-load_dotenv(Path(__file__).parent / ".env")
+import requests as req
 
-from eventhub_manager import stop_eventhub
+try:
+    import streamlit as st
+    def _get_secret(key: str) -> str:
+        try:
+            return st.secrets[key]
+        except Exception:
+            return os.getenv(key)
+except Exception:
+    def _get_secret(key: str) -> str:
+        return os.getenv(key)
 
-EVENTHUB              = "ubertopic"
-ENV_FILE              = ".env"
-DATABRICKS_HOST       = os.getenv("DATABRICKS_HOST")
-DATABRICKS_TOKEN      = os.getenv("DATABRICKS_TOKEN")
-PIPELINE_ID           = os.getenv("PIPELINE_ID")
-DATABRICKS_HTTP_PATH  = os.getenv("DATABRICKS_HTTP_PATH")
-ADMIN_USERNAME        = os.getenv("ADMIN_USERNAME")
-ADMIN_PASSWORD        = os.getenv("ADMIN_PASSWORD")
-SECRET_KEY            = os.getenv("SECRET_KEY")
-AZURE_TENANT_ID       = os.getenv("AZURE_TENANT_ID")
-AZURE_CLIENT_ID       = os.getenv("AZURE_CLIENT_ID")
-AZURE_CLIENT_SECRET   = os.getenv("AZURE_CLIENT_SECRET")
-AZURE_SUBSCRIPTION_ID = os.getenv("AZURE_SUBSCRIPTION_ID")
+from azure.identity import ClientSecretCredential
+from azure.mgmt.eventhub import EventHubManagementClient
+from azure.keyvault.secrets import SecretClient
 
-# ── Confirmation ──────────────────────────────────────────────────
-auto_confirm = "--yes" in sys.argv
-if not auto_confirm:
-    confirm = input("Delete EventHub namespace 'rg-uber-events'? This stops billing. (yes/no): ")
-    if confirm.lower() != "yes":
-        print("Cancelled.")
-        exit(0)
+RESOURCE_GROUP  = "rg-uber"
+NAMESPACE       = "rg-uber-events"
+EVENTHUB        = "ubertopic"
+LOCATION        = "eastus"
+KEY_VAULT_URL   = "https://uber-kv-avikal.vault.azure.net/"
 
-# ── Delete EventHub + clear Key Vault ────────────────────────────
-print("Stopping EventHub...")
-stop_eventhub(on_status=print)
-print("Key Vault secrets cleared ✅")
+# Key Vault secret names — these are the keys stored in the vault
+KV_CONNECTION_STRING          = "CONNECTION-STRING"
+KV_LISTENER_CONNECTION_STRING = "LISTENER-CONNECTION-STRING"
+KV_EVENT_HUBNAME              = "EVENT-HUBNAME"
 
-# ── Clear local .env ──────────────────────────────────────────────
-env_contents = f"""CONNECTION_STRING=
-EVENT_HUBNAME=
-LISTENER_CONNECTION_STRING=
 
-DATABRICKS_HOST={DATABRICKS_HOST}
-DATABRICKS_TOKEN={DATABRICKS_TOKEN}
-PIPELINE_ID={PIPELINE_ID}
-DATABRICKS_HTTP_PATH={DATABRICKS_HTTP_PATH}
+def _get_credential() -> ClientSecretCredential:
+    """Shared credential used for both EventHub mgmt and Key Vault."""
+    return ClientSecretCredential(
+        tenant_id=_get_secret("AZURE_TENANT_ID"),
+        client_id=_get_secret("AZURE_CLIENT_ID"),
+        client_secret=_get_secret("AZURE_CLIENT_SECRET")
+    )
 
-ADMIN_USERNAME={ADMIN_USERNAME}
-ADMIN_PASSWORD={ADMIN_PASSWORD}
-SECRET_KEY={SECRET_KEY}
 
-AZURE_TENANT_ID={AZURE_TENANT_ID}
-AZURE_CLIENT_ID={AZURE_CLIENT_ID}
-AZURE_CLIENT_SECRET={AZURE_CLIENT_SECRET}
-AZURE_SUBSCRIPTION_ID={AZURE_SUBSCRIPTION_ID}
-"""
-with open(ENV_FILE, "w") as f:
-    f.write(env_contents)
+def _get_mgmt_client() -> EventHubManagementClient:
+    return EventHubManagementClient(
+        credential=_get_credential(),
+        subscription_id=_get_secret("AZURE_SUBSCRIPTION_ID")
+    )
 
-# ── Clear local .streamlit/secrets.toml ──────────────────────────
-secrets_toml = f"""CONNECTION_STRING = ""
-LISTENER_CONNECTION_STRING = ""
-EVENT_HUBNAME = ""
-DATABRICKS_HOST = "{DATABRICKS_HOST}"
-DATABRICKS_TOKEN = "{DATABRICKS_TOKEN}"
-PIPELINE_ID = "{PIPELINE_ID}"
-DATABRICKS_HTTP_PATH = "{DATABRICKS_HTTP_PATH}"
-ADMIN_USERNAME = "{ADMIN_USERNAME}"
-ADMIN_PASSWORD = "{ADMIN_PASSWORD}"
-SECRET_KEY = "{SECRET_KEY}"
-AZURE_TENANT_ID = "{AZURE_TENANT_ID}"
-AZURE_CLIENT_ID = "{AZURE_CLIENT_ID}"
-AZURE_CLIENT_SECRET = "{AZURE_CLIENT_SECRET}"
-AZURE_SUBSCRIPTION_ID = "{AZURE_SUBSCRIPTION_ID}"
-"""
-os.makedirs(".streamlit", exist_ok=True)
-with open(".streamlit/secrets.toml", "w") as f:
-    f.write(secrets_toml)
 
-print("\n" + "=" * 60)
-print("EventHub DELETED — billing stopped")
-print("Key Vault cleared — app will show EventHub as OFFLINE ✅")
-print(".env and secrets.toml cleared")
-print("=" * 60)
+def _get_kv_client() -> SecretClient:
+    return SecretClient(
+        vault_url=KEY_VAULT_URL,
+        credential=_get_credential()
+    )
+
+
+# ── Key Vault helpers ─────────────────────────────────────────────
+
+def kv_set(name: str, value: str) -> None:
+    """Write a secret to Key Vault."""
+    _get_kv_client().set_secret(name, value)
+
+
+def kv_get(name: str) -> str | None:
+    """Read a secret from Key Vault. Returns None if not found."""
+    try:
+        return _get_kv_client().get_secret(name).value
+    except Exception:
+        return None
+
+
+def kv_clear(name: str) -> None:
+    """Set a Key Vault secret to empty string (marks as inactive)."""
+    _get_kv_client().set_secret(name, "")
+
+
+# ── Public API ────────────────────────────────────────────────────
+
+def get_connection_strings() -> tuple[str | None, str | None]:
+    """
+    Fetch CONNECTION_STRING and LISTENER_CONNECTION_STRING from Key Vault.
+    Returns (sender_conn, listener_conn) — either may be None/empty if offline.
+    Call this at runtime instead of reading from st.secrets.
+    """
+    sender   = kv_get(KV_CONNECTION_STRING)
+    listener = kv_get(KV_LISTENER_CONNECTION_STRING)
+    return sender, listener
+
+
+def start_eventhub(on_status=None) -> tuple[str, str]:
+    """
+    Provision EventHub namespace, topic, and SAS policies.
+    Writes connection strings directly to Key Vault.
+    Returns (sender_connection_string, listener_connection_string).
+    """
+    def log(msg):
+        if on_status:
+            on_status(msg)
+
+    client = _get_mgmt_client()
+
+    log("Creating EventHub namespace...")
+    client.namespaces.begin_create_or_update(
+        resource_group_name=RESOURCE_GROUP,
+        namespace_name=NAMESPACE,
+        parameters={
+            "location": LOCATION,
+            "sku": {"name": "Standard", "tier": "Standard", "capacity": 1}
+        }
+    ).result()
+    log("Namespace ready")
+
+    log("Creating EventHub topic...")
+    client.event_hubs.create_or_update(
+        resource_group_name=RESOURCE_GROUP,
+        namespace_name=NAMESPACE,
+        event_hub_name=EVENTHUB,
+        parameters={"message_retention_in_days": 1, "partition_count": 2}
+    )
+    log("Topic ready")
+
+    log("Creating access policies...")
+    client.namespaces.create_or_update_authorization_rule(
+        resource_group_name=RESOURCE_GROUP,
+        namespace_name=NAMESPACE,
+        authorization_rule_name="SenderPolicy",
+        parameters={"rights": ["Send"]}
+    )
+    client.namespaces.create_or_update_authorization_rule(
+        resource_group_name=RESOURCE_GROUP,
+        namespace_name=NAMESPACE,
+        authorization_rule_name="ListenerPolicy",
+        parameters={"rights": ["Listen"]}
+    )
+
+    log("Fetching connection strings...")
+    sender_keys   = client.namespaces.list_keys(RESOURCE_GROUP, NAMESPACE, "SenderPolicy")
+    listener_keys = client.namespaces.list_keys(RESOURCE_GROUP, NAMESPACE, "ListenerPolicy")
+
+    sender_conn   = sender_keys.primary_connection_string
+    listener_conn = listener_keys.primary_connection_string
+
+    # ── Write to Key Vault ────────────────────────────────────────
+    log("Writing connection strings to Key Vault...")
+    kv_set(KV_CONNECTION_STRING, sender_conn)
+    kv_set(KV_LISTENER_CONNECTION_STRING, listener_conn)
+    kv_set(KV_EVENT_HUBNAME, EVENTHUB)
+    log("Key Vault updated")
+
+    return sender_conn, listener_conn
+
+
+def stop_eventhub(on_status=None) -> None:
+    """
+    Delete the EventHub namespace and clear Key Vault secrets.
+    Billing stops immediately.
+    """
+    def log(msg):
+        if on_status:
+            on_status(msg)
+
+    client = _get_mgmt_client()
+    log("Deleting namespace...")
+    client.namespaces.begin_delete(
+        resource_group_name=RESOURCE_GROUP,
+        namespace_name=NAMESPACE
+    ).result()
+    log("Namespace deleted — billing stopped")
+
+    # ── Clear Key Vault ───────────────────────────────────────────
+    log("Clearing Key Vault secrets...")
+    kv_clear(KV_CONNECTION_STRING)
+    kv_clear(KV_LISTENER_CONNECTION_STRING)
+    kv_clear(KV_EVENT_HUBNAME)
+    log("Key Vault cleared")
+
+
+def update_pipeline_connection_string(listener_conn_str: str, on_status=None) -> None:
+    """Update the EventHub connection string in the Databricks DLT pipeline config."""
+    def log(msg):
+        if on_status:
+            on_status(msg)
+
+    host        = _get_secret("DATABRICKS_HOST")
+    token       = _get_secret("DATABRICKS_TOKEN")
+    pipeline_id = _get_secret("PIPELINE_ID")
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    log("Updating Databricks pipeline config...")
+    resp = req.get(f"{host}/api/2.0/pipelines/{pipeline_id}", headers=headers)
+    if resp.status_code != 200:
+        raise RuntimeError(f"Failed to get pipeline settings: {resp.status_code}")
+
+    pipeline = resp.json()
+    config   = pipeline.get("spec", {}).get("configuration", {})
+    config["connection_string"] = listener_conn_str
+
+    updated_spec = pipeline["spec"]
+    updated_spec["configuration"] = config
+
+    resp = req.put(
+        f"{host}/api/2.0/pipelines/{pipeline_id}",
+        headers=headers,
+        json=updated_spec
+    )
+    if resp.status_code != 200:
+        raise RuntimeError(f"Failed to update pipeline: {resp.status_code}")
+    log("Pipeline config updated")
+
+
+def trigger_pipeline(full_refresh: bool = False):
+    """Trigger a Databricks DLT pipeline update. Returns the API response."""
+    host        = _get_secret("DATABRICKS_HOST")
+    token       = _get_secret("DATABRICKS_TOKEN")
+    pipeline_id = _get_secret("PIPELINE_ID")
+
+    return req.post(
+        f"{host}/api/2.0/pipelines/{pipeline_id}/updates",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        json={"full_refresh": full_refresh}
+    )
