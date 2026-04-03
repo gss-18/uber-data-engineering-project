@@ -8,3 +8,5 @@ databricks-sql-connector>=3.0.0
 azure-eventhub>=5.11.0
 faker>=20.0.0
 requests>=2.31.0
+azure-mgmt-eventhub>=10.1.0
+azure-identity>=1.15.0

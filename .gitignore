@@ -13,3 +13,4 @@ wheels/
 .env
 
 not_for_you/
+.streamlit/secrets.toml

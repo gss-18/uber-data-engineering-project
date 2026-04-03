@@ -1,21 +1,24 @@
 import streamlit as st
-import subprocess
 import os
-import sys
 import time
 import requests as req
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-ADMIN_USERNAME        = st.secrets.get("ADMIN_USERNAME")        or os.getenv("ADMIN_USERNAME")
-ADMIN_PASSWORD        = st.secrets.get("ADMIN_PASSWORD")        or os.getenv("ADMIN_PASSWORD")
-DATABRICKS_TOKEN      = st.secrets.get("DATABRICKS_TOKEN")      or os.getenv("DATABRICKS_TOKEN")
-DATABRICKS_HOST       = st.secrets.get("DATABRICKS_HOST")       or os.getenv("DATABRICKS_HOST")
-PIPELINE_ID           = st.secrets.get("PIPELINE_ID")           or os.getenv("PIPELINE_ID")
-DATABRICKS_HTTP_PATH  = st.secrets.get("DATABRICKS_HTTP_PATH")  or os.getenv("DATABRICKS_HTTP_PATH")
-SECRET_KEY            = st.secrets.get("SECRET_KEY")            or os.getenv("SECRET_KEY")
-if 'PROJECT_ROOT' not in vars():
-    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) if "__file__" in dir() else os.path.dirname(os.path.dirname(os.getcwd()))
+from eventhub_manager import (
+    start_eventhub,
+    stop_eventhub,
+    update_pipeline_connection_string,
+    trigger_pipeline,
+)
+
+ADMIN_USERNAME   = st.secrets.get("ADMIN_USERNAME")   or os.getenv("ADMIN_USERNAME")
+ADMIN_PASSWORD   = st.secrets.get("ADMIN_PASSWORD")   or os.getenv("ADMIN_PASSWORD")
+DATABRICKS_TOKEN = st.secrets.get("DATABRICKS_TOKEN") or os.getenv("DATABRICKS_TOKEN")
+DATABRICKS_HOST  = st.secrets.get("DATABRICKS_HOST")  or os.getenv("DATABRICKS_HOST")
+PIPELINE_ID      = st.secrets.get("PIPELINE_ID")      or os.getenv("PIPELINE_ID")
+
+EVENTHUB = "ubertopic"
 
 
 def section(label, sublabel=""):
@@ -59,7 +62,6 @@ if not st.session_state.control_auth:
     st.stop()
 
 # ── Authenticated ──────────────────────────────────────────────────
-load_dotenv(override=True)
 connection_string = st.secrets.get("CONNECTION_STRING") or os.getenv("CONNECTION_STRING")
 eventhub_live     = bool(connection_string)
 
@@ -71,7 +73,7 @@ st.markdown(f"""
             <div style="font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">EventHub Status</div>
             <div style="display:flex;align-items:center;gap:0.5rem;">
                 <div style="width:8px;height:8px;border-radius:50%;background:{'#00ffc8' if eventhub_live else '#ff4444'};box-shadow:0 0 {'10px #00ffc8' if eventhub_live else '10px #ff4444'};"></div>
-                <div style="font-family:'Space Mono',monospace;font-size:0.8rem;font-weight:700;color:{'#00ffc8' if eventhub_live else '#ff4444'};">{'LIVE' if eventhub_live else 'OFFLINE'}</div>
+                <div style="font-family:'Space Mono',monospace;font-size:0.8rem;font-weight:700;color:{'#00ffc8' if eventhub_live else '#ff4444'};font-weight:700;">{'LIVE' if eventhub_live else 'OFFLINE'}</div>
             </div>
         </div>
         <div>
@@ -99,55 +101,73 @@ col_start, col_stop, col_info = st.columns([1, 1, 3])
 
 with col_start:
     if st.button("▶ Start EventHub", type="primary", disabled=eventhub_live, use_container_width=True):
-        _secrets_env = {
-            **os.environ,
-            "DATABRICKS_HOST":       DATABRICKS_HOST       or "",
-            "DATABRICKS_TOKEN":      DATABRICKS_TOKEN      or "",
-            "PIPELINE_ID":           PIPELINE_ID           or "",
-            "DATABRICKS_HTTP_PATH":  DATABRICKS_HTTP_PATH  or "",
-            "ADMIN_USERNAME":        ADMIN_USERNAME        or "",
-            "ADMIN_PASSWORD":        ADMIN_PASSWORD        or "",
-            "SECRET_KEY":            SECRET_KEY            or "",
-        }
         with st.spinner("Provisioning EventHub namespace (~2 min)..."):
-            result = subprocess.run(
-                [sys.executable, "start_eventhub.py"],
-                capture_output=True, text=True, encoding="utf-8", cwd=PROJECT_ROOT,
-                env=_secrets_env
-            )
-        if result.returncode == 0:
-            st.success("EventHub started")
-            st.code(result.stdout, language=None)
-        else:
-            st.error("Failed to start EventHub")
-            st.code(result.stderr, language=None)
+            try:
+                sender_conn, listener_conn = start_eventhub()
+                update_pipeline_connection_string(listener_conn)
+
+                # Build secrets block for manual paste into Streamlit Cloud
+                secrets_block = f"""CONNECTION_STRING = "{sender_conn}"
+LISTENER_CONNECTION_STRING = "{listener_conn}"
+EVENT_HUBNAME = "{EVENTHUB}"
+DATABRICKS_HOST = "{DATABRICKS_HOST}"
+DATABRICKS_TOKEN = "{DATABRICKS_TOKEN}"
+PIPELINE_ID = "{PIPELINE_ID}"
+DATABRICKS_HTTP_PATH = "{st.secrets.get('DATABRICKS_HTTP_PATH') or os.getenv('DATABRICKS_HTTP_PATH')}"
+ADMIN_USERNAME = "{ADMIN_USERNAME}"
+ADMIN_PASSWORD = "{ADMIN_PASSWORD}"
+SECRET_KEY = "{st.secrets.get('SECRET_KEY') or os.getenv('SECRET_KEY')}"
+AZURE_TENANT_ID = "{st.secrets.get('AZURE_TENANT_ID') or os.getenv('AZURE_TENANT_ID')}"
+AZURE_CLIENT_ID = "{st.secrets.get('AZURE_CLIENT_ID') or os.getenv('AZURE_CLIENT_ID')}"
+AZURE_CLIENT_SECRET = "{st.secrets.get('AZURE_CLIENT_SECRET') or os.getenv('AZURE_CLIENT_SECRET')}"
+AZURE_SUBSCRIPTION_ID = "{st.secrets.get('AZURE_SUBSCRIPTION_ID') or os.getenv('AZURE_SUBSCRIPTION_ID')}"
+"""
+                st.success("✅ EventHub started — Databricks pipeline config updated")
+                st.warning(
+                    "⚠️ Copy the secrets block below and paste it into "
+                    "**App ⋮ → Settings → Secrets**, then reboot the app "
+                    "so the new connection string takes effect."
+                )
+                st.code(secrets_block, language="toml")
+
+            except Exception as e:
+                st.error(f"Failed to start EventHub: {e}")
+
         time.sleep(1)
         st.rerun()
 
 with col_stop:
     confirm = st.checkbox("Confirm stop", disabled=not eventhub_live)
     if st.button("⏹ Stop EventHub", type="secondary", disabled=(not eventhub_live or not confirm), use_container_width=True):
-        _secrets_env = {
-            **os.environ,
-            "DATABRICKS_HOST":       DATABRICKS_HOST       or "",
-            "DATABRICKS_TOKEN":      DATABRICKS_TOKEN      or "",
-            "PIPELINE_ID":           PIPELINE_ID           or "",
-            "DATABRICKS_HTTP_PATH":  DATABRICKS_HTTP_PATH  or "",
-            "ADMIN_USERNAME":        ADMIN_USERNAME        or "",
-            "ADMIN_PASSWORD":        ADMIN_PASSWORD        or "",
-            "SECRET_KEY":            SECRET_KEY            or "",
-        }
-        with st.spinner("Deleting namespace — billing stops immediately"):
-            result = subprocess.run(
-                [sys.executable, "stop_eventhub.py", "--yes"],
-                capture_output=True, text=True, encoding="utf-8", cwd=PROJECT_ROOT,
-                env=_secrets_env
-            )
-        if result.returncode == 0:
-            st.success("EventHub deleted — billing stopped")
-        else:
-            st.error("Failed to stop EventHub")
-            st.code(result.stderr, language=None)
+        with st.spinner("Deleting namespace — billing stops immediately..."):
+            try:
+                stop_eventhub()
+
+                secrets_block = f"""CONNECTION_STRING = ""
+LISTENER_CONNECTION_STRING = ""
+EVENT_HUBNAME = ""
+DATABRICKS_HOST = "{DATABRICKS_HOST}"
+DATABRICKS_TOKEN = "{DATABRICKS_TOKEN}"
+PIPELINE_ID = "{PIPELINE_ID}"
+DATABRICKS_HTTP_PATH = "{st.secrets.get('DATABRICKS_HTTP_PATH') or os.getenv('DATABRICKS_HTTP_PATH')}"
+ADMIN_USERNAME = "{ADMIN_USERNAME}"
+ADMIN_PASSWORD = "{ADMIN_PASSWORD}"
+SECRET_KEY = "{st.secrets.get('SECRET_KEY') or os.getenv('SECRET_KEY')}"
+AZURE_TENANT_ID = "{st.secrets.get('AZURE_TENANT_ID') or os.getenv('AZURE_TENANT_ID')}"
+AZURE_CLIENT_ID = "{st.secrets.get('AZURE_CLIENT_ID') or os.getenv('AZURE_CLIENT_ID')}"
+AZURE_CLIENT_SECRET = "{st.secrets.get('AZURE_CLIENT_SECRET') or os.getenv('AZURE_CLIENT_SECRET')}"
+AZURE_SUBSCRIPTION_ID = "{st.secrets.get('AZURE_SUBSCRIPTION_ID') or os.getenv('AZURE_SUBSCRIPTION_ID')}"
+"""
+                st.success("✅ EventHub deleted — billing stopped")
+                st.warning(
+                    "⚠️ Paste the block below into **App ⋮ → Settings → Secrets** "
+                    "and reboot to mark EventHub as OFFLINE in the dashboard."
+                )
+                st.code(secrets_block, language="toml")
+
+            except Exception as e:
+                st.error(f"Failed to stop EventHub: {e}")
+
         time.sleep(1)
         st.rerun()
 
@@ -156,8 +176,8 @@ with col_info:
     <div style="border:1px solid rgba(255,184,0,0.15);background:rgba(255,184,0,0.04);padding:1rem 1.25rem;border-radius:2px;font-family:'Space Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.8;">
         <span style="color:rgba(255,184,0,0.7);">// cost model</span><br>
         Standard tier · ~$0.015/TU/hr · delete when not in use<br>
-        Start: creates namespace + policies + updates .env + triggers pipeline<br>
-        Stop: deletes namespace + clears credentials + preserves archive data
+        Start: creates namespace + policies + updates Databricks pipeline config<br>
+        Stop: deletes namespace + preserves archive data in Delta Lake
     </div>
     """, unsafe_allow_html=True)
 
@@ -171,11 +191,7 @@ col_trigger, col_full, col_pinfo = st.columns([1, 1, 3])
 
 with col_trigger:
     if st.button("⚡ Trigger Update", type="primary", use_container_width=True):
-        resp = req.post(
-            f"{DATABRICKS_HOST}/api/2.0/pipelines/{PIPELINE_ID}/updates",
-            headers={"Authorization": f"Bearer {DATABRICKS_TOKEN}"},
-            json={"full_refresh": False}
-        )
+        resp = trigger_pipeline(full_refresh=False)
         if resp.status_code == 200:
             st.success("Pipeline update triggered")
         else:
@@ -184,11 +200,7 @@ with col_trigger:
 with col_full:
     confirm_full = st.checkbox("Confirm full refresh")
     if st.button("↺ Full Refresh", type="secondary", disabled=not confirm_full, use_container_width=True):
-        resp = req.post(
-            f"{DATABRICKS_HOST}/api/2.0/pipelines/{PIPELINE_ID}/updates",
-            headers={"Authorization": f"Bearer {DATABRICKS_TOKEN}"},
-            json={"full_refresh": True}
-        )
+        resp = trigger_pipeline(full_refresh=True)
         if resp.status_code == 200:
             st.success("Full refresh triggered")
         else:
