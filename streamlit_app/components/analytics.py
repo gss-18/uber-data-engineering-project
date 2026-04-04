@@ -347,24 +347,36 @@ with col_map:
     </div>
     """, unsafe_allow_html=True)
 
-    @st.cache_data(ttl=120)
-    def load_map_data():
-        return get_pickup_locations(200)
+    # get_pickup_locations is already cached in db.py via @st.cache_data
+    locs = get_pickup_locations(200)
 
-    locs = load_map_data()
     if locs:
-        df_locs = pd.DataFrame(locs).dropna(subset=["pickup_latitude","pickup_longitude"])
+        df_locs = pd.DataFrame(locs).dropna(subset=["pickup_latitude", "pickup_longitude"])
         df_locs = df_locs[
             df_locs["pickup_latitude"].between(-90, 90) &
             df_locs["pickup_longitude"].between(-180, 180)
         ]
-        m = folium.Map(location=[39.5, -98.35], zoom_start=3, tiles="CartoDB dark_matter")
-        heat_data = df_locs[["pickup_latitude", "pickup_longitude"]].values.tolist()
-        HeatMap(heat_data, radius=12, blur=10, min_opacity=0.4).add_to(m)
-        st_folium(m, use_container_width=True, height=380)
+        if not df_locs.empty:
+            m = folium.Map(
+                location=[39.5, -98.35],
+                zoom_start=3,
+                tiles="CartoDB dark_matter"
+            )
+            heat_data = df_locs[["pickup_latitude", "pickup_longitude"]].values.tolist()
+            HeatMap(heat_data, radius=12, blur=10, min_opacity=0.4).add_to(m)
+            st_folium(
+                m,
+                use_container_width=True,
+                height=380,
+                returned_objects=[],   # prevents st_folium from watching for click events — more stable
+                key="pickup_heatmap"   # stable key prevents re-renders
+            )
+        else:
+            st.info("No coordinate data available")
+    else:
+        st.info("No pickup data — trigger pipeline to load rides")
 
-st.markdown('</div>', unsafe_allow_html=True)
-
+        
 # ── Top drivers ────────────────────────────────────────────────────
 section("Driver leaderboard", "ranked by total rides completed")
 st.markdown('<div style="padding: 0 2rem 2rem;">', unsafe_allow_html=True)
