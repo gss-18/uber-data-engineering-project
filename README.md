@@ -2,11 +2,15 @@
 
 > End-to-end streaming data pipeline with a live analytics dashboard — built on Azure EventHub, Databricks Delta Live Tables, and Streamlit.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://uber-data-engineering-project.streamlit.app)
+[![GitHub](https://img.shields.io/badge/GitHub-avikalsingh-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/avikalsingh/uber-data-engineering-project)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
 ![Azure](https://img.shields.io/badge/Azure-EventHub-0078D4?style=flat-square&logo=microsoftazure&logoColor=white)
 ![Databricks](https://img.shields.io/badge/Databricks-DLT-FF3621?style=flat-square&logo=databricks&logoColor=white)
 ![Delta Lake](https://img.shields.io/badge/Delta-Lake-00ADD8?style=flat-square&logo=apachespark&logoColor=white)
+
+🔗 **Live Dashboard:** https://uber-data-engineering-project.streamlit.app
+📁 **GitHub:** https://github.com/avikalsingh/uber-data-engineering-project
 
 ---
 
@@ -91,7 +95,7 @@ Analytics-ready layer.
 
 ## 📊 Dashboard — Mission Control
 
-Two-tab Streamlit app deployed at Streamlit Cloud.
+Two-tab Streamlit app → **https://uber-data-engineering-project.streamlit.app**
 
 **Tab 01 — Analytics & Live Data**
 - KPI cards: total rides, revenue, avg fare, cancellation rate, avg rating
@@ -99,10 +103,10 @@ Two-tab Streamlit app deployed at Streamlit Cloud.
 - Vehicle type distribution (donut)
 - Payment method breakdown
 - Surge multiplier distribution
-- Top drivers leaderboard
-- Live ride feed (auto-refreshes every 10s)
-- Pickup heatmap (Folium)
 - Regional revenue breakdown
+- Live ride feed
+- Pickup heatmap (Folium)
+- Top drivers leaderboard
 
 **Tab 02 — Pipeline Control** *(password protected)*
 - Start / Stop Azure EventHub (provisions/deletes namespace via Azure SDK)
@@ -142,7 +146,7 @@ Retained for portfolio demonstration value — tracks historical city-level chan
 
 ### 1. Clone and install
 ```bash
-git clone https://github.com/YOUR_USERNAME/uber-data-engineering-project.git
+git clone https://github.com/avikalsingh/uber-data-engineering-project.git
 cd uber-data-engineering-project
 python -m venv .uber_de
 .uber_de\Scripts\activate       # Windows
