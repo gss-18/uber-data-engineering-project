@@ -114,13 +114,13 @@ st.markdown('<div style="padding: 0 2rem 1.5rem;">', unsafe_allow_html=True)
 
 kpi_cols = st.columns(7)
 kpis = [
-    ("Total Rides",      f"{int(k['total_rides']):,}",              "rides"),
-    ("Revenue",          f"${int(k['total_revenue']):,}",            "USD"),
-    ("Avg Fare",         f"${k['avg_fare']}",                        "per ride"),
-    ("Avg Surge",        f"{k['avg_surge']}×",                       "multiplier"),
-    ("Avg Rating",       f"{k['avg_rating']}",                       "/ 5.0"),
-    ("Avg Distance",     f"{k['avg_distance']}",                     "miles"),
-    ("Cancellation",     f"{k.get('cancellation_rate', '—')}%",      "rate"),
+    ("Total Rides",  f"{int(k['total_rides'] or 0):,}",       "rides"),
+    ("Revenue",      f"${int(k['total_revenue'] or 0):,}",     "USD"),
+    ("Avg Fare",     f"${k['avg_fare'] or '—'}",               "per ride"),
+    ("Avg Surge",    f"{k['avg_surge'] or '—'}×",              "multiplier"),
+    ("Avg Rating",   f"{k['avg_rating'] or '—'}",              "/ 5.0"),
+    ("Avg Distance", f"{k['avg_distance'] or '—'}",            "miles"),
+    ("Cancellation", f"{k.get('cancellation_rate') or '—'}%",  "rate"),
 ]
 
 for col, (label, value, unit) in zip(kpi_cols, kpis):
