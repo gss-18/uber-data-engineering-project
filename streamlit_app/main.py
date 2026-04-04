@@ -24,6 +24,15 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# ── Auto-start warehouse on first load ────────────────────────────
+if "warehouse_started" not in st.session_state:
+    st.session_state.warehouse_started = True
+    try:
+        from db import _ensure_warehouse_running
+        _ensure_warehouse_running()
+    except Exception:
+        pass  # never crash the app over this
+
 # ── Global CSS ─────────────────────────────────────────────────────
 st.markdown("""
 <style>

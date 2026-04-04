@@ -3,6 +3,40 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 import streamlit as st
+import requests
+
+
+def _ensure_warehouse_running() -> None:
+    """Start the SQL warehouse if it is stopped. Called once on app load."""
+    host        = _get_secret("DATABRICKS_HOST")
+    token       = _get_secret("DATABRICKS_TOKEN")
+    http_path   = _get_secret("DATABRICKS_HTTP_PATH")
+    
+    # Extract warehouse ID from http_path
+    # e.g. /sql/1.0/warehouses/c6f1ccf7eaf58c6c → c6f1ccf7eaf58c6c
+    warehouse_id = http_path.strip("/").split("/")[-1]
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    # Check current state
+    resp = requests.get(
+        f"{host}/api/2.0/sql/warehouses/{warehouse_id}",
+        headers=headers
+    )
+    if resp.status_code != 200:
+        return  # fail silently — don't crash the app
+    
+    state = resp.json().get("state", "")
+    
+    if state in ("STOPPED", "STOPPING"):
+        # Start it — this returns immediately, warehouse takes ~30s to be ready
+        requests.post(
+            f"{host}/api/2.0/sql/warehouses/{warehouse_id}/start",
+            headers=headers
+        )
 
 # Module-level connection — reused across queries so we don't pay the
 # Databricks HTTP handshake + auth cost on every single query call.
