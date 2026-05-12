@@ -4,69 +4,398 @@
     "city": "New York",
     "state": "NY",
     "region": "Northeast",
-    "updated_at":"2026-02-28T23:31:33.718+00:00"
+    "updated_at": "2026-01-26T12:12:00.000+00:00"
   },
   {
     "city_id": 2,
-    "city": "Las Vegas",
-    "state": "NV",
+    "city": "Los Angeles",
+    "state": "CA",
     "region": "West",
-    "updated_at":"2026-01-29T23:21:33.718+00:00"
+    "updated_at": "2026-02-08T05:14:00.000+00:00"
   },
   {
     "city_id": 3,
     "city": "Chicago",
     "state": "IL",
     "region": "Midwest",
-    "updated_at":"2026-02-26T23:33:33.718+00:00"
+    "updated_at": "2026-01-16T04:48:00.000+00:00"
   },
   {
     "city_id": 4,
     "city": "Houston",
     "state": "TX",
     "region": "South",
-    "updated_at":"2026-02-28T23:26:33.718+00:00"
+    "updated_at": "2026-01-06T08:46:00.000+00:00"
   },
   {
     "city_id": 5,
     "city": "Phoenix",
     "state": "AZ",
     "region": "Southwest",
-    "updated_at":"2026-02-28T23:07:13.718+00:00"
+    "updated_at": "2026-01-25T16:43:00.000+00:00"
   },
   {
     "city_id": 6,
     "city": "Philadelphia",
     "state": "PA",
     "region": "Northeast",
-    "updated_at":"2026-01-30T23:07:33.718+00:00"
+    "updated_at": "2026-02-14T17:05:00.000+00:00"
   },
   {
     "city_id": 7,
     "city": "San Antonio",
     "state": "TX",
     "region": "South",
-    "updated_at":"2026-02-28T23:47:33.718+00:00"
+    "updated_at": "2026-02-09T15:12:00.000+00:00"
   },
   {
     "city_id": 8,
     "city": "San Diego",
     "state": "CA",
     "region": "West",
-    "updated_at":"2026-02-28T23:36:50.718+00:00"
+    "updated_at": "2026-01-27T23:39:00.000+00:00"
   },
   {
     "city_id": 9,
     "city": "Dallas",
     "state": "TX",
     "region": "South",
-    "updated_at":"2026-02-29T06:06:33.718+00:00"
+    "updated_at": "2026-02-07T06:50:00.000+00:00"
   },
   {
     "city_id": 10,
     "city": "San Jose",
     "state": "CA",
     "region": "West",
-    "updated_at":"2026-02-29T12:56:33.718+00:00"
+    "updated_at": "2026-02-27T11:52:00.000+00:00"
+  },
+  {
+    "city_id": 11,
+    "city": "Birmingham",
+    "state": "AL",
+    "region": "South",
+    "updated_at": "2026-01-25T21:13:00.000+00:00"
+  },
+  {
+    "city_id": 12,
+    "city": "Anchorage",
+    "state": "AK",
+    "region": "West",
+    "updated_at": "2026-01-10T14:42:00.000+00:00"
+  },
+  {
+    "city_id": 13,
+    "city": "Little Rock",
+    "state": "AR",
+    "region": "South",
+    "updated_at": "2026-01-12T18:21:00.000+00:00"
+  },
+  {
+    "city_id": 14,
+    "city": "Denver",
+    "state": "CO",
+    "region": "West",
+    "updated_at": "2026-01-06T22:33:00.000+00:00"
+  },
+  {
+    "city_id": 15,
+    "city": "Hartford",
+    "state": "CT",
+    "region": "Northeast",
+    "updated_at": "2026-02-13T02:30:00.000+00:00"
+  },
+  {
+    "city_id": 16,
+    "city": "Wilmington",
+    "state": "DE",
+    "region": "Northeast",
+    "updated_at": "2026-01-21T12:02:00.000+00:00"
+  },
+  {
+    "city_id": 17,
+    "city": "Washington DC",
+    "state": "DC",
+    "region": "Northeast",
+    "updated_at": "2026-01-18T17:00:00.000+00:00"
+  },
+  {
+    "city_id": 18,
+    "city": "Jacksonville",
+    "state": "FL",
+    "region": "South",
+    "updated_at": "2026-01-28T06:23:00.000+00:00"
+  },
+  {
+    "city_id": 19,
+    "city": "Atlanta",
+    "state": "GA",
+    "region": "South",
+    "updated_at": "2026-02-04T02:29:00.000+00:00"
+  },
+  {
+    "city_id": 20,
+    "city": "Honolulu",
+    "state": "HI",
+    "region": "West",
+    "updated_at": "2026-02-03T06:38:00.000+00:00"
+  },
+  {
+    "city_id": 21,
+    "city": "Boise",
+    "state": "ID",
+    "region": "West",
+    "updated_at": "2026-01-30T01:22:00.000+00:00"
+  },
+  {
+    "city_id": 22,
+    "city": "Indianapolis",
+    "state": "IN",
+    "region": "Midwest",
+    "updated_at": "2026-01-09T06:58:00.000+00:00"
+  },
+  {
+    "city_id": 23,
+    "city": "Des Moines",
+    "state": "IA",
+    "region": "Midwest",
+    "updated_at": "2026-02-15T05:47:00.000+00:00"
+  },
+  {
+    "city_id": 24,
+    "city": "Wichita",
+    "state": "KS",
+    "region": "Midwest",
+    "updated_at": "2026-02-20T14:38:00.000+00:00"
+  },
+  {
+    "city_id": 25,
+    "city": "Louisville",
+    "state": "KY",
+    "region": "South",
+    "updated_at": "2026-01-12T16:42:00.000+00:00"
+  },
+  {
+    "city_id": 26,
+    "city": "New Orleans",
+    "state": "LA",
+    "region": "South",
+    "updated_at": "2026-01-12T01:07:00.000+00:00"
+  },
+  {
+    "city_id": 27,
+    "city": "Portland",
+    "state": "ME",
+    "region": "Northeast",
+    "updated_at": "2026-01-02T05:30:00.000+00:00"
+  },
+  {
+    "city_id": 28,
+    "city": "Baltimore",
+    "state": "MD",
+    "region": "Northeast",
+    "updated_at": "2026-02-13T13:05:00.000+00:00"
+  },
+  {
+    "city_id": 29,
+    "city": "Boston",
+    "state": "MA",
+    "region": "Northeast",
+    "updated_at": "2026-01-28T20:05:00.000+00:00"
+  },
+  {
+    "city_id": 30,
+    "city": "Detroit",
+    "state": "MI",
+    "region": "Midwest",
+    "updated_at": "2026-01-10T09:39:00.000+00:00"
+  },
+  {
+    "city_id": 31,
+    "city": "Minneapolis",
+    "state": "MN",
+    "region": "Midwest",
+    "updated_at": "2026-01-01T12:21:00.000+00:00"
+  },
+  {
+    "city_id": 32,
+    "city": "Jackson",
+    "state": "MS",
+    "region": "South",
+    "updated_at": "2026-01-09T16:25:00.000+00:00"
+  },
+  {
+    "city_id": 33,
+    "city": "Kansas City",
+    "state": "MO",
+    "region": "Midwest",
+    "updated_at": "2026-01-13T01:40:00.000+00:00"
+  },
+  {
+    "city_id": 34,
+    "city": "Billings",
+    "state": "MT",
+    "region": "West",
+    "updated_at": "2026-01-14T14:16:00.000+00:00"
+  },
+  {
+    "city_id": 35,
+    "city": "Omaha",
+    "state": "NE",
+    "region": "Midwest",
+    "updated_at": "2026-02-04T12:52:00.000+00:00"
+  },
+  {
+    "city_id": 36,
+    "city": "Las Vegas",
+    "state": "NV",
+    "region": "West",
+    "updated_at": "2026-02-18T04:22:00.000+00:00"
+  },
+  {
+    "city_id": 37,
+    "city": "Manchester",
+    "state": "NH",
+    "region": "Northeast",
+    "updated_at": "2026-02-14T15:59:00.000+00:00"
+  },
+  {
+    "city_id": 38,
+    "city": "Newark",
+    "state": "NJ",
+    "region": "Northeast",
+    "updated_at": "2026-01-04T04:47:00.000+00:00"
+  },
+  {
+    "city_id": 39,
+    "city": "Albuquerque",
+    "state": "NM",
+    "region": "Southwest",
+    "updated_at": "2026-02-25T22:38:00.000+00:00"
+  },
+  {
+    "city_id": 40,
+    "city": "Buffalo",
+    "state": "NY",
+    "region": "Northeast",
+    "updated_at": "2026-02-19T23:09:00.000+00:00"
+  },
+  {
+    "city_id": 41,
+    "city": "Charlotte",
+    "state": "NC",
+    "region": "South",
+    "updated_at": "2026-02-08T13:07:00.000+00:00"
+  },
+  {
+    "city_id": 42,
+    "city": "Fargo",
+    "state": "ND",
+    "region": "Midwest",
+    "updated_at": "2026-01-07T03:09:00.000+00:00"
+  },
+  {
+    "city_id": 43,
+    "city": "Columbus",
+    "state": "OH",
+    "region": "Midwest",
+    "updated_at": "2026-01-19T05:11:00.000+00:00"
+  },
+  {
+    "city_id": 44,
+    "city": "Oklahoma City",
+    "state": "OK",
+    "region": "South",
+    "updated_at": "2026-01-27T04:59:00.000+00:00"
+  },
+  {
+    "city_id": 45,
+    "city": "Portland",
+    "state": "OR",
+    "region": "West",
+    "updated_at": "2026-01-14T17:20:00.000+00:00"
+  },
+  {
+    "city_id": 46,
+    "city": "Pittsburgh",
+    "state": "PA",
+    "region": "Northeast",
+    "updated_at": "2026-02-19T15:51:00.000+00:00"
+  },
+  {
+    "city_id": 47,
+    "city": "Providence",
+    "state": "RI",
+    "region": "Northeast",
+    "updated_at": "2026-01-15T08:07:00.000+00:00"
+  },
+  {
+    "city_id": 48,
+    "city": "Columbia",
+    "state": "SC",
+    "region": "South",
+    "updated_at": "2026-02-24T11:11:00.000+00:00"
+  },
+  {
+    "city_id": 49,
+    "city": "Sioux Falls",
+    "state": "SD",
+    "region": "Midwest",
+    "updated_at": "2026-02-13T02:32:00.000+00:00"
+  },
+  {
+    "city_id": 50,
+    "city": "Nashville",
+    "state": "TN",
+    "region": "South",
+    "updated_at": "2026-01-19T00:37:00.000+00:00"
+  },
+  {
+    "city_id": 51,
+    "city": "Salt Lake City",
+    "state": "UT",
+    "region": "West",
+    "updated_at": "2026-02-23T01:21:00.000+00:00"
+  },
+  {
+    "city_id": 52,
+    "city": "Burlington",
+    "state": "VT",
+    "region": "Northeast",
+    "updated_at": "2026-01-14T12:25:00.000+00:00"
+  },
+  {
+    "city_id": 53,
+    "city": "Virginia Beach",
+    "state": "VA",
+    "region": "South",
+    "updated_at": "2026-01-22T12:24:00.000+00:00"
+  },
+  {
+    "city_id": 54,
+    "city": "Seattle",
+    "state": "WA",
+    "region": "West",
+    "updated_at": "2026-01-27T11:34:00.000+00:00"
+  },
+  {
+    "city_id": 55,
+    "city": "Charleston",
+    "state": "WV",
+    "region": "South",
+    "updated_at": "2026-01-06T05:56:00.000+00:00"
+  },
+  {
+    "city_id": 56,
+    "city": "Milwaukee",
+    "state": "WI",
+    "region": "Midwest",
+    "updated_at": "2026-01-03T11:46:00.000+00:00"
+  },
+  {
+    "city_id": 57,
+    "city": "Cheyenne",
+    "state": "WY",
+    "region": "West",
+    "updated_at": "2026-02-24T12:49:00.000+00:00"
   }
 ]
