@@ -3,6 +3,7 @@ import os
 import time
 from dotenv import load_dotenv
 load_dotenv(override=True)
+from config_utils import get_secret
 
 from eventhub_manager import (
     start_eventhub,
@@ -14,18 +15,19 @@ from eventhub_manager import (
     EVENTHUB,
 )
 
-ADMIN_USERNAME   = st.secrets.get("ADMIN_USERNAME")   or os.getenv("ADMIN_USERNAME")
-ADMIN_PASSWORD   = st.secrets.get("ADMIN_PASSWORD")   or os.getenv("ADMIN_PASSWORD")
-DATABRICKS_TOKEN = st.secrets.get("DATABRICKS_TOKEN") or os.getenv("DATABRICKS_TOKEN")
-DATABRICKS_HOST  = st.secrets.get("DATABRICKS_HOST")  or os.getenv("DATABRICKS_HOST")
-PIPELINE_ID      = st.secrets.get("PIPELINE_ID")      or os.getenv("PIPELINE_ID")
+ADMIN_USERNAME   = get_secret("ADMIN_USERNAME")
+ADMIN_PASSWORD   = get_secret("ADMIN_PASSWORD")
+DATABRICKS_TOKEN = get_secret("DATABRICKS_TOKEN")
+DATABRICKS_HOST  = get_secret("DATABRICKS_HOST")
+PIPELINE_ID      = get_secret("PIPELINE_ID")
 
 
 def section(label, sublabel=""):
+    sub_html = f'<div class="section-heading-sub">// {sublabel}</div>' if sublabel else ""
     st.markdown(f"""
-    <div style="display:flex;align-items:center;gap:1rem;padding:1.5rem 2rem 0.75rem;border-top:1px solid rgba(255,255,255,0.04);">
-        <div style="font-family:'Space Mono',monospace;font-size:0.6rem;color:#ffb800;letter-spacing:0.2em;text-transform:uppercase;">{label}</div>
-        {'<div style="font-family:Space Mono,monospace;font-size:0.55rem;color:rgba(255,255,255,0.2);letter-spacing:0.1em;">// ' + sublabel + '</div>' if sublabel else ''}
+    <div class="section-heading">
+        <div class="section-heading-label" style="color:#ffb800;">{label}</div>
+        {sub_html}
     </div>
     """, unsafe_allow_html=True)
 
@@ -39,13 +41,13 @@ if not st.session_state.control_auth:
     with col_form:
         st.markdown('<div style="padding: 4rem 0 2rem;">', unsafe_allow_html=True)
         st.markdown("""
-        <div style="font-family:'Space Mono',monospace;font-size:0.6rem;color:rgba(255,255,255,0.3);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:2rem;text-align:center;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:rgba(255,255,255,0.3);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:2rem;text-align:center;">
             // Authentication required to access pipeline controls
         </div>
         """, unsafe_allow_html=True)
         with st.form("auth_form"):
             st.markdown("""
-            <div style="font-family:'Space Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:0.15em;margin-bottom:1rem;">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:0.15em;margin-bottom:1rem;">
                 PIPELINE ACCESS
             </div>
             """, unsafe_allow_html=True)
@@ -73,32 +75,32 @@ st.markdown(f"""
 <div style="display:flex;align-items:center;justify-content:space-between;padding:1.5rem 2rem;background:rgba(0,0,0,0.2);border-bottom:1px solid rgba(255,255,255,0.04);">
     <div style="display:flex;align-items:center;gap:2rem;">
         <div>
-            <div style="font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">EventHub Status</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">EventHub Status</div>
             <div style="display:flex;align-items:center;gap:0.5rem;">
-                <div style="width:8px;height:8px;border-radius:50%;background:{'#00ffc8' if eventhub_live else '#ff4444'};box-shadow:0 0 {'10px #00ffc8' if eventhub_live else '10px #ff4444'};"></div>
-                <div style="font-family:'Space Mono',monospace;font-size:0.8rem;font-weight:700;color:{'#00ffc8' if eventhub_live else '#ff4444'};">{'LIVE' if eventhub_live else 'OFFLINE'}</div>
+                <div style="width:8px;height:8px;border-radius:50%;background:{'#00e5c3' if eventhub_live else '#ff4444'};box-shadow:0 0 {'10px #00e5c3' if eventhub_live else '10px #ff4444'};"></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:0.8rem;font-weight:700;color:{'#00e5c3' if eventhub_live else '#ff4444'};">{'LIVE' if eventhub_live else 'OFFLINE'}</div>
             </div>
         </div>
         <div>
-            <div style="font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">Namespace</div>
-            <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);">{NAMESPACE}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">Namespace</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);">{NAMESPACE}</div>
         </div>
         <div>
-            <div style="font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">Topic</div>
-            <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);">{EVENTHUB}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">Topic</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);">{EVENTHUB}</div>
         </div>
         <div>
-            <div style="font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">Workspace</div>
-            <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);">dbc-fcbf72bc</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.3rem;">Workspace</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.7);">dbc-fcbf72bc</div>
         </div>
     </div>
-    <div style="font-family:'Space Mono',monospace;font-size:0.6rem;color:rgba(255,255,255,0.2);">Operator: {ADMIN_USERNAME}</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:rgba(255,255,255,0.2);">Operator: {ADMIN_USERNAME}</div>
 </div>
 """, unsafe_allow_html=True)
 
 # ── EventHub controls ──────────────────────────────────────────────
 section("EventHub control", "create or destroy the streaming namespace")
-st.markdown('<div style="padding: 0 2rem 1.5rem;">', unsafe_allow_html=True)
+st.markdown('<div class="app-section">', unsafe_allow_html=True)
 
 col_start, col_stop, col_info = st.columns([1, 1, 3])
 
@@ -156,7 +158,7 @@ with col_stop:
 
 with col_info:
     st.markdown("""
-    <div style="border:1px solid rgba(255,184,0,0.15);background:rgba(255,184,0,0.04);padding:1rem 1.25rem;border-radius:2px;font-family:'Space Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.8;">
+    <div style="border:1px solid rgba(255,184,0,0.15);background:rgba(255,184,0,0.04);padding:1rem 1.25rem;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.8;">
         <span style="color:rgba(255,184,0,0.7);">// cost model</span><br>
         Standard tier · ~$0.015/TU/hr · delete when not in use<br>
         Start: creates namespace + writes to Key Vault + updates pipeline<br>
@@ -168,7 +170,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 # ── Pipeline control ───────────────────────────────────────────────
 section("Databricks DLT pipeline", "trigger updates and monitor pipeline status")
-st.markdown('<div style="padding: 0 2rem 1.5rem;">', unsafe_allow_html=True)
+st.markdown('<div class="app-section">', unsafe_allow_html=True)
 
 col_trigger, col_full, col_pinfo = st.columns([1, 1, 3])
 
@@ -191,8 +193,8 @@ with col_full:
 
 with col_pinfo:
     st.markdown(f"""
-    <div style="border:1px solid rgba(0,255,200,0.12);background:rgba(0,255,200,0.02);padding:1rem 1.25rem;border-radius:2px;font-family:'Space Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.8;">
-        <span style="color:rgba(0,255,200,0.5);">// pipeline config</span><br>
+    <div style="border:1px solid rgba(0,229,195,0.12);background:rgba(0,229,195,0.02);padding:1rem 1.25rem;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.8;">
+        <span style="color:rgba(0,229,195,0.5);">// pipeline config</span><br>
         ID: {PIPELINE_ID[:8]}...{PIPELINE_ID[-4:]}<br>
         Workspace: {DATABRICKS_HOST.replace('https://','')}<br>
         Mode: Triggered · Compute: Serverless · Catalog: uber
@@ -202,8 +204,8 @@ with col_pinfo:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ── Schema overview ────────────────────────────────────────────────
-section("Data architecture", "medallion schema — bronze → silver → gold")
-st.markdown('<div style="padding: 0 2rem 1.5rem;">', unsafe_allow_html=True)
+section("Data architecture", "medallion schema: bronze to silver to gold")
+st.markdown('<div class="app-section">', unsafe_allow_html=True)
 
 col_b, col_s, col_g = st.columns(3)
 
@@ -248,14 +250,14 @@ for col, (schema_name, schema_data) in zip([col_b, col_s, col_g], schemas.items(
         color = schema_data["color"]
         tables_html = "".join([
             f"""<div style="display:flex;flex-direction:column;gap:2px;padding:0.6rem 0.75rem;border-bottom:1px solid rgba(255,255,255,0.04);">
-                <div style="font-family:'Space Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.7);">{t[0]}</div>
-                <div style="font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.25);">{t[1]}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:rgba(255,255,255,0.7);">{t[0]}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.25);">{t[1]}</div>
             </div>"""
             for t in schema_data["tables"]
         ])
         st.markdown(f"""
         <div style="border:1px solid rgba(255,255,255,0.08);border-top:2px solid {color};background:rgba(255,255,255,0.02);border-radius:2px;overflow:hidden;">
-            <div style="padding:0.75rem;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);font-family:'Space Mono',monospace;font-size:0.65rem;color:{color};letter-spacing:0.1em;">
+            <div style="padding:0.75rem;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:{color};letter-spacing:0.1em;">
                 {schema_name} · {len(schema_data['tables'])} tables
             </div>
             {tables_html}

@@ -3,11 +3,12 @@ import requests as req
 import os
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+from config_utils import get_secret
 load_dotenv(override=True)
 
-DATABRICKS_TOKEN = st.secrets.get("DATABRICKS_TOKEN") or os.getenv("DATABRICKS_TOKEN")
-DATABRICKS_HOST  = st.secrets.get("DATABRICKS_HOST") or os.getenv("DATABRICKS_HOST")
-PIPELINE_ID      = st.secrets.get("PIPELINE_ID") or os.getenv("PIPELINE_ID")
+DATABRICKS_TOKEN = get_secret("DATABRICKS_TOKEN")
+DATABRICKS_HOST  = get_secret("DATABRICKS_HOST")
+PIPELINE_ID      = get_secret("PIPELINE_ID")
 
 STATE_CONFIG = {
     "RUNNING":      {"color": "#00ffc8", "label": "Running",      "animate": True},
@@ -155,9 +156,10 @@ def render_pipeline_bar():
     pid          = f'<div style="font-size:0.55rem;color:rgba(255,255,255,0.15);white-space:nowrap;">{PIPELINE_ID[:8]}...{PIPELINE_ID[-4:]}</div>'
 
     html = (
-        '<div style="display:flex;align-items:center;gap:1.5rem;padding:0.6rem 2rem;'
-        'background:rgba(0,0,0,0.25);border-bottom:1px solid rgba(255,255,255,0.04);'
-        'font-family:Space Mono,monospace;">'
+        '<div style="display:flex;align-items:center;gap:1.1rem;padding:0.65rem 2rem;'
+        'background:linear-gradient(90deg,rgba(0,229,195,0.045),rgba(0,0,0,0.22));'
+        'border-bottom:1px solid rgba(0,229,195,0.10);'
+        'font-family:IBM Plex Mono,monospace;box-shadow:inset 0 -1px 0 rgba(255,255,255,0.02);">'
         '<div style="font-size:0.55rem;color:rgba(255,255,255,0.25);letter-spacing:0.15em;'
         'text-transform:uppercase;white-space:nowrap;">DLT Pipeline</div>'
         f'<div style="display:flex;align-items:center;gap:0.4rem;">{dot}{status_label}</div>'

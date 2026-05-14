@@ -4,6 +4,7 @@ load_dotenv()
 import os
 import streamlit as st
 import requests
+from config_utils import get_secret
 
 
 def _ensure_warehouse_running() -> None:
@@ -45,10 +46,7 @@ _conn = None
 
 def _get_secret(key: str) -> str:
     """Read from st.secrets first (Streamlit Cloud), fall back to os.getenv (local)."""
-    try:
-        return st.secrets[key]
-    except (KeyError, FileNotFoundError):
-        return os.getenv(key)
+    return get_secret(key)
 
 
 def get_connection():
@@ -62,14 +60,17 @@ def get_connection():
     return _conn
 
 
-def query(sql_str: str) -> list[dict]:
+def query(sql_str: str, parameters: list | tuple | dict | None = None) -> list[dict]:
     """Run a SQL query, reusing the cached connection. Reconnects once on error."""
     global _conn
     for attempt in range(2):
         try:
             conn = get_connection()
             with conn.cursor() as cursor:
-                cursor.execute(sql_str)
+                if parameters is None:
+                    cursor.execute(sql_str)
+                else:
+                    cursor.execute(sql_str, parameters)
                 columns = [col[0] for col in cursor.description]
                 rows = cursor.fetchall()
                 return [dict(zip(columns, row)) for row in rows]

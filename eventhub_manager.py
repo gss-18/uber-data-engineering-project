@@ -10,17 +10,10 @@ so no manual secrets paste is ever needed after start/stop.
 """
 import os
 import requests as req
+from config_utils import get_secret
 
-try:
-    import streamlit as st
-    def _get_secret(key: str) -> str:
-        try:
-            return st.secrets[key]
-        except Exception:
-            return os.getenv(key)
-except Exception:
-    def _get_secret(key: str) -> str:
-        return os.getenv(key)
+def _get_secret(key: str) -> str:
+    return get_secret(key)
 
 from azure.identity import ClientSecretCredential
 from azure.mgmt.eventhub import EventHubManagementClient

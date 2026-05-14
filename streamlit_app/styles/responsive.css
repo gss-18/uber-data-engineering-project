@@ -1,0 +1,11 @@
+@media (max-width: 900px) {
+  .block-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  [data-testid="column"] {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+}
