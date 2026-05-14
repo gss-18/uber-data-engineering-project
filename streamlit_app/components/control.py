@@ -53,7 +53,7 @@ if not st.session_state.control_auth:
             """, unsafe_allow_html=True)
             username  = st.text_input("Username", placeholder="username")
             password  = st.text_input("Password", type="password", placeholder="••••••••")
-            submitted = st.form_submit_button("Authenticate →", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("Authenticate →", type="primary", width='stretch')
             if submitted:
                 if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
                     st.session_state.control_auth = True
@@ -105,7 +105,7 @@ st.markdown('<div class="app-section">', unsafe_allow_html=True)
 col_start, col_stop, col_info = st.columns([1, 1, 3])
 
 with col_start:
-    if st.button("▶ Start EventHub", type="primary", disabled=eventhub_live, use_container_width=True):
+    if st.button("▶ Start EventHub", type="primary", disabled=eventhub_live, width='stretch'):
         status_box = st.empty()
         try:
             def on_status(msg):
@@ -132,7 +132,7 @@ with col_start:
 
 with col_stop:
     confirm = st.checkbox("Confirm stop", disabled=not eventhub_live)
-    if st.button("⏹ Stop EventHub", type="secondary", disabled=(not eventhub_live or not confirm), use_container_width=True):
+    if st.button("⏹ Stop EventHub", type="secondary", disabled=(not eventhub_live or not confirm), width='stretch'):
         status_box = st.empty()
         try:
             def on_status(msg):
@@ -175,7 +175,7 @@ st.markdown('<div class="app-section">', unsafe_allow_html=True)
 col_trigger, col_full, col_pinfo = st.columns([1, 1, 3])
 
 with col_trigger:
-    if st.button("⚡ Trigger Update", type="primary", use_container_width=True):
+    if st.button("⚡ Trigger Update", type="primary", width='stretch'):
         resp = trigger_pipeline(full_refresh=False)
         if resp.status_code == 200:
             st.success("Pipeline update triggered")
@@ -184,7 +184,7 @@ with col_trigger:
 
 with col_full:
     confirm_full = st.checkbox("Confirm full refresh")
-    if st.button("↺ Full Refresh", type="secondary", disabled=not confirm_full, use_container_width=True):
+    if st.button("↺ Full Refresh", type="secondary", disabled=not confirm_full, width='stretch'):
         resp = trigger_pipeline(full_refresh=True)
         if resp.status_code == 200:
             st.success("Full refresh triggered")

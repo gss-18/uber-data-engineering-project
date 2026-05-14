@@ -14,3 +14,7 @@ wheels/
 
 not_for_you/
 .streamlit/secrets.toml
+
+# Local databases
+*.db
+*.sqlite

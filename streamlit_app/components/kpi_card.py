@@ -49,7 +49,7 @@ def render_kpi_card(
     if sparkline_data and len(sparkline_data) > 1:
         st.plotly_chart(
             create_sparkline(sparkline_data, accent),
-            use_container_width=True,
+            width='stretch',
             config={"displayModeBar": False},
             key=f"sparkline_{_stable_key(title)}",
         )

@@ -20,10 +20,10 @@ if COMPONENTS_DIR not in sys.path:
     sys.path.insert(0, COMPONENTS_DIR)
 
 from ai_service import is_configured as ai_is_configured
+from components.agentic_popup_chat import render_agentic_popup_chat
 from components.floating_chat import render_floating_chat
 from components.pipeline_status import render_pipeline_bar
 from components.scroll_animations import inject_scroll_animations
-from components.status_bar import render_status_bar
 from config_utils import get_secret
 from design_tokens import inject_design_system, render_app_header
 
@@ -63,9 +63,9 @@ ai_ready = ai_is_configured()
 render_app_header(eventhub_live=eventhub_live, ai_ready=ai_ready)
 render_pipeline_bar()
 
-st.markdown('<div class="app-section" style="padding-top:1rem;">', unsafe_allow_html=True)
-render_status_bar(eventhub_live=eventhub_live, ai_ready=ai_ready)
-st.markdown("</div>", unsafe_allow_html=True)
+
+# render_agentic_popup_chat()
+render_floating_chat()
 
 tab_analytics, tab_control = st.tabs(
     [
@@ -82,4 +82,3 @@ with tab_analytics:
 with tab_control:
     exec(open(pages_dir / "control.py", encoding="utf-8").read())
 
-render_floating_chat()

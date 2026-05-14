@@ -27,7 +27,7 @@ def render_ride_table(df: pd.DataFrame, height: int = 380) -> None:
     )
     st.dataframe(
         df,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         height=height,
     )

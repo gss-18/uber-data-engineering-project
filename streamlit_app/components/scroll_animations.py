@@ -4,7 +4,8 @@ Injects CSS + IntersectionObserver into Streamlit's parent DOM. Targets natural
 Streamlit data-testid selectors plus .kc/.shd classes. Idempotent — re-running is a no-op.
 """
 
-import streamlit.components.v1 as components
+import streamlit as st
+import streamlit.components.v1 as _components
 
 _INJECTOR = """<!DOCTYPE html>
 <html>
@@ -21,7 +22,8 @@ _INJECTOR = """<!DOCTYPE html>
     const style = parentDoc.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `
-      [data-testid="stIFrame"], iframe[title="streamlit_components.v1.html.html"] {
+      [data-testid="stIFrame"]:not([data-chat-overlay]),
+      [data-testid="stIframe"]:not([data-chat-overlay]) {
         opacity: 0;
         transform: perspective(1200px) rotateX(35deg) translateY(50px);
         transform-origin: center bottom;
@@ -29,8 +31,8 @@ _INJECTOR = """<!DOCTYPE html>
                     transform 0.95s cubic-bezier(0.2, 0, 0, 1);
         will-change: transform, opacity;
       }
-      [data-testid="stIFrame"].animate-visible,
-      iframe[title="streamlit_components.v1.html.html"].animate-visible {
+      [data-testid="stIFrame"]:not([data-chat-overlay]).animate-visible,
+      [data-testid="stIframe"]:not([data-chat-overlay]).animate-visible {
         opacity: 1;
         transform: perspective(1200px) rotateX(0) translateY(0);
       }
@@ -62,7 +64,7 @@ _INJECTOR = """<!DOCTYPE html>
       }
 
       [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) [data-testid="stPlotlyChart"],
-      [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) [data-testid="stIFrame"] {
+      [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) [data-testid="stIFrame"]:not([data-chat-overlay]) {
         transition-delay: 0.15s;
       }
 
@@ -85,8 +87,8 @@ _INJECTOR = """<!DOCTYPE html>
       }
 
       @media (prefers-reduced-motion: reduce) {
-        [data-testid="stIFrame"],
-        iframe[title="streamlit_components.v1.html.html"],
+        [data-testid="stIFrame"]:not([data-chat-overlay]),
+        [data-testid="stIframe"]:not([data-chat-overlay]),
         [data-testid="stPlotlyChart"],
         .section-heading, .shd, .kc {
           opacity: 1 !important;
@@ -118,7 +120,7 @@ _INJECTOR = """<!DOCTYPE html>
     );
 
     const SELECTOR =
-      '[data-testid="stIFrame"], iframe[title="streamlit_components.v1.html.html"], ' +
+      '[data-testid="stIFrame"]:not([data-chat-overlay]), [data-testid="stIframe"]:not([data-chat-overlay]), ' +
       '[data-testid="stPlotlyChart"], .section-heading, .shd, .kc';
 
     // Count-up animation for .kc elements
@@ -191,4 +193,4 @@ _INJECTOR = """<!DOCTYPE html>
 
 def inject_scroll_animations() -> None:
     """Inject scroll-triggered animations targeting the parent Streamlit DOM."""
-    components.html(_INJECTOR, height=0)
+    _components.html(_INJECTOR, height=0)

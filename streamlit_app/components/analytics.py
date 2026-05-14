@@ -7,7 +7,6 @@ from streamlit_folium import st_folium
 
 load_dotenv(override=True)
 
-from components.ai_chat import render_ai_operations
 from components.enhanced_charts import enhanced_bar_chart, enhanced_pie_chart, revenue_region_chart
 from components.kpi_card import render_kpi_cards_html
 from components.ride_table import render_ride_table
@@ -58,10 +57,10 @@ def action_bar() -> None:
         num_rides = st.number_input("rides", min_value=1, max_value=100, value=1, label_visibility="collapsed")
 
     with col_book:
-        book_btn = st.button("Book Ride(s)", type="primary", use_container_width=True)
+        book_btn = st.button("Book Ride(s)", type="primary", width='stretch')
 
     with col_refresh:
-        if st.button("Refresh", type="secondary", use_container_width=True):
+        if st.button("Refresh", type="secondary", width='stretch'):
             st.cache_data.clear()
             st.session_state.ai_insights = None
             st.rerun()
@@ -101,7 +100,7 @@ def render_demand(data: dict) -> None:
         if not df_city.empty:
             st.plotly_chart(
                 enhanced_bar_chart(df_city, "city", "total_rides", "top 10 cities by rides"),
-                use_container_width=True,
+                width='stretch',
                 config={"displayModeBar": False},
             )
         else:
@@ -112,7 +111,7 @@ def render_demand(data: dict) -> None:
         if not df_vehicle.empty:
             st.plotly_chart(
                 enhanced_pie_chart(df_vehicle, "vehicle_type", "total_rides", "vehicle type split"),
-                use_container_width=True,
+                width='stretch',
                 config={"displayModeBar": False},
             )
         else:
@@ -131,7 +130,7 @@ def render_revenue(data: dict) -> None:
         if not df_payment.empty:
             st.plotly_chart(
                 enhanced_pie_chart(df_payment, "payment_method", "total_rides", "payment methods"),
-                use_container_width=True,
+                width='stretch',
                 config={"displayModeBar": False},
             )
         else:
@@ -142,7 +141,7 @@ def render_revenue(data: dict) -> None:
         if not df_surge.empty:
             st.plotly_chart(
                 enhanced_bar_chart(df_surge, "surge_bucket", "ride_count", "surge multiplier distribution", COLORS["accent_gold"]),
-                use_container_width=True,
+                width='stretch',
                 config={"displayModeBar": False},
             )
         else:
@@ -156,7 +155,7 @@ def render_regions(data: dict) -> None:
     st.markdown('<div class="app-section">', unsafe_allow_html=True)
     df_region = pd.DataFrame(data["by_region"])
     if not df_region.empty:
-        st.plotly_chart(revenue_region_chart(df_region), use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(revenue_region_chart(df_region), width='stretch', config={"displayModeBar": False})
     else:
         st.info("No regional data available.")
     st.markdown("</div>", unsafe_allow_html=True)
@@ -187,7 +186,7 @@ def render_live_operations(data: dict) -> None:
             if not df_locs.empty:
                 m = folium.Map(location=[39.5, -98.35], zoom_start=3, tiles="CartoDB dark_matter")
                 HeatMap(df_locs[["pickup_latitude", "pickup_longitude"]].values.tolist(), radius=12, blur=10, min_opacity=0.4).add_to(m)
-                st_folium(m, use_container_width=True, height=380, returned_objects=[], key="pickup_heatmap")
+                st_folium(m, width='stretch', height=380, returned_objects=[], key="pickup_heatmap")
             else:
                 st.info("No valid coordinate data available.")
         else:
@@ -245,10 +244,6 @@ action_bar()
 
 with st.spinner(""):
     data = load_data()
-
-st.markdown('<div class="app-section">', unsafe_allow_html=True)
-render_ai_operations(data)
-st.markdown("</div>", unsafe_allow_html=True)
 
 render_kpis(data["kpis"])
 render_demand(data)
