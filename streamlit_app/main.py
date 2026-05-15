@@ -63,9 +63,20 @@ ai_ready = ai_is_configured()
 render_app_header(eventhub_live=eventhub_live, ai_ready=ai_ready)
 render_pipeline_bar()
 
+try:
+    from db import get_kpis, get_rides_by_city, get_top_drivers, get_revenue_by_region, get_rides_by_vehicle_type
+    _chat_live_data = {
+        "kpis":       get_kpis(),
+        "by_city":    get_rides_by_city(),
+        "drivers":    get_top_drivers(5),
+        "by_region":  get_revenue_by_region(),
+        "by_vehicle": get_rides_by_vehicle_type(),
+    }
+except Exception:
+    _chat_live_data = None
 
 # render_agentic_popup_chat()
-render_floating_chat()
+render_floating_chat(live_data=_chat_live_data)
 
 tab_analytics, tab_control = st.tabs(
     [
